@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import {
   doc,
   getFirestore,
-  setDoc,
+  deleteDoc,
   onSnapshot,
   collection,
 } from "firebase/firestore";
@@ -15,24 +15,19 @@ import { useContext, useEffect, useState } from "react";
 import { getAuth, User } from "firebase/auth";
 import { UserContext, UserUpdateContext } from "../provider/UserProvider";
 import Router from "next/router";
+import Link from "../components/Link";
+import AddLinkForm from "../components/AddLinkForm";
 
 export default function Home() {
   const db = getFirestore(firebaseApp);
-  const [url, setUrl] = useState<string>("");
-  const [name, setName] = useState<string>("");
   const [links, setLinks] = useState<Array<{ name: string; url: string }>>([]);
-
+  const [showAddLinkForm, setShowAddLinkForm] = useState(false);
   const user = useContext(UserContext);
   const updateUser = useContext(UserUpdateContext);
 
-  async function writeUserData(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    await setDoc(doc(db, "users", user?.uid!!, "links", name), {
-      name,
-      url,
-    });
-  }
+  const deleteLink = async (name: string) => {
+    await deleteDoc(doc(db, "users", user?.uid!!, "links", name));
+  };
 
   useEffect(() => {
     const localStorageUser = localStorage.getItem("user");
@@ -56,7 +51,7 @@ export default function Home() {
       }
     );
     return () => unsub();
-  }, [user]);
+  }, [db, user]);
 
   if (!user) return <></>;
   return (
@@ -70,32 +65,23 @@ export default function Home() {
       <main>
         <Header />
         <div className="p-2 gap-2 flex flex-col">
-          <form onSubmit={(e) => writeUserData(e)}>
-            <div className="gap-2 flex">
-              <input
-                onChange={(e) => setName(e.target.value)}
-                className="border-blue-300 border-2 outline-0 p-2"
-                placeholder="Enter a name"
-              />
-              <input
-                onChange={(e) => setUrl(e.target.value)}
-                className="border-blue-300 border-2 outline-0 p-2"
-                placeholder="Enter a URL"
-              />
-              <button className="border-blue-300 border-2 outline-0 p-2">
-                Add
-              </button>
-            </div>
-          </form>
-          <div className="grid gap-2 grid-auto-fit">
+          <button
+            onClick={() => setShowAddLinkForm(true)}
+            className="w-36 bg-sky-500 text-white p-2 rounded-md"
+          >
+            Add Link
+          </button>
+          {showAddLinkForm && (
+            <AddLinkForm setShowAddLinkForm={setShowAddLinkForm} />
+          )}
+          <div className="grid gap-2 grid-cols-auto-240">
             {links.map((link) => (
-              <a
-                href={link.url}
+              <Link
                 key={link.name}
-                className="border-sky-700 border-2 h-32"
-              >
-                <div>{link.name}</div>
-              </a>
+                name={link.name}
+                url={link.url}
+                deleteLink={deleteLink}
+              />
             ))}
           </div>
         </div>
