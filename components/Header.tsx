@@ -3,19 +3,18 @@ import Router from "next/router";
 import { useContext } from "react";
 import { firebaseApp } from "../firebase/firebase";
 import Image from "next/image";
-import { UserContext, UserUpdateContext } from "../provider/UserProvider";
+import { UserContext } from "../provider/UserProvider";
 
 const auth = getAuth(firebaseApp);
 
 const Header = () => {
   // useContext
-  const user = useContext(UserContext);
-  const updateUser = useContext(UserUpdateContext);
+  const { user, setUser } = useContext(UserContext);
 
   // functions
   const signOut = async () => {
     await auth.signOut();
-    updateUser(null);
+    setUser(null);
     Router.push("/auth");
   };
 

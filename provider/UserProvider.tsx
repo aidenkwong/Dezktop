@@ -2,9 +2,10 @@ import { User } from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
 import { firebaseAuth } from "../firebase/firebase";
 
-export const UserContext = createContext(firebaseAuth.currentUser);
-export const UserUpdateContext = createContext((user: User | null) => {});
-
+export const UserContext = createContext({
+  user: firebaseAuth.currentUser,
+  setUser: (_user: User | null) => {},
+});
 const UserProvider = ({ children }: any) => {
   // useState
   const [user, setUser] = useState<User | null>(firebaseAuth.currentUser);
@@ -27,15 +28,10 @@ const UserProvider = ({ children }: any) => {
     setUser(user);
     localStorage.setItem("user", JSON.stringify(user));
   };
-  const updateUser = (user: User | null) => {
-    setUser(user);
-  };
 
   return (
-    <UserContext.Provider value={user}>
-      <UserUpdateContext.Provider value={updateUser}>
-        {children}
-      </UserUpdateContext.Provider>
+    <UserContext.Provider value={{ user, setUser }}>
+      {children}
     </UserContext.Provider>
   );
 };

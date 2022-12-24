@@ -2,20 +2,20 @@ import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
 import Router from "next/router";
 import { useContext } from "react";
 import { firebaseApp } from "../../firebase/firebase";
-import { UserUpdateContext } from "../../provider/UserProvider";
+import { UserContext } from "../../provider/UserProvider";
 
 const provider = new GoogleAuthProvider();
 const auth = getAuth(firebaseApp);
 
 const Auth = () => {
   // useContext
-  const updateUser = useContext(UserUpdateContext);
+  const { setUser } = useContext(UserContext);
 
   // functions
   const signIn = async () => {
     const { user } = await signInWithPopup(auth, provider);
 
-    updateUser(user);
+    setUser(user);
     Router.push("/");
   };
 

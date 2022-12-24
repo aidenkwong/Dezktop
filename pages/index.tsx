@@ -9,10 +9,11 @@ import {
 } from "firebase/firestore";
 import { firebaseApp } from "../firebase/firebase";
 import { useContext, useEffect, useState } from "react";
-import { UserContext, UserUpdateContext } from "../provider/UserProvider";
+import { UserContext } from "../provider/UserProvider";
 import Router from "next/router";
 import Link from "../components/Link";
 import AddLinkForm from "../components/AddLinkForm";
+import { User } from "firebase/auth";
 
 const db = getFirestore(firebaseApp);
 
@@ -22,8 +23,7 @@ export default function Home() {
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
 
   // useContext
-  const user = useContext(UserContext);
-  const updateUser = useContext(UserUpdateContext);
+  const { user, setUser } = useContext(UserContext);
 
   // useEffect
   useEffect(() => {
@@ -32,9 +32,10 @@ export default function Home() {
     if (!localStorageUser) {
       Router.push("/auth");
     } else {
-      updateUser(JSON.parse(localStorageUser));
+      setUser(JSON.parse(localStorageUser) as User);
     }
-  }, [updateUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (user?.uid) {
@@ -75,7 +76,7 @@ export default function Home() {
         <div className="p-2 gap-2 flex flex-col">
           <button
             onClick={() => setShowAddLinkForm(true)}
-            className="w-36 bg-zinc-500 text-white p-2 rounded-md"
+            className="w-36 bg-zinc-900 text-white p-2 rounded-md"
           >
             Add Link
           </button>
