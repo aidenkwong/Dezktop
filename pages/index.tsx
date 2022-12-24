@@ -1,5 +1,4 @@
 import Head from "next/head";
-
 import Header from "../components/Header";
 import {
   doc,
@@ -8,56 +7,65 @@ import {
   onSnapshot,
   collection,
 } from "firebase/firestore";
-
-import firebaseApp from "../firebase/firebase";
-import firebaseAuth from "../firebase/firebaseAuth";
+import { firebaseApp } from "../firebase/firebase";
 import { useContext, useEffect, useState } from "react";
-import { getAuth, User } from "firebase/auth";
 import { UserContext, UserUpdateContext } from "../provider/UserProvider";
 import Router from "next/router";
 import Link from "../components/Link";
 import AddLinkForm from "../components/AddLinkForm";
 
+const db = getFirestore(firebaseApp);
+
 export default function Home() {
-  const db = getFirestore(firebaseApp);
+  // useState
   const [links, setLinks] = useState<Array<{ name: string; url: string }>>([]);
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
+
+  // useContext
   const user = useContext(UserContext);
   const updateUser = useContext(UserUpdateContext);
 
-  const deleteLink = async (name: string) => {
-    await deleteDoc(doc(db, "users", user?.uid!!, "links", name));
-  };
-
+  // useEffect
   useEffect(() => {
     const localStorageUser = localStorage.getItem("user");
+
     if (!localStorageUser) {
       Router.push("/auth");
     } else {
       updateUser(JSON.parse(localStorageUser));
     }
-  }, []);
+  }, [updateUser]);
 
   useEffect(() => {
-    if (!user) return;
-    const unsub = onSnapshot(
-      collection(db, "users", user?.uid!!, "links"),
-      (querySnapshot) => {
-        const cities: Array<{ name: string; url: string }> = [];
-        querySnapshot.forEach((doc) => {
-          cities.push({ name: doc.data().name, url: doc.data().url });
-        });
-        setLinks(cities);
-      }
-    );
-    return () => unsub();
-  }, [db, user]);
+    if (user?.uid) {
+      const unsub = onSnapshot(
+        collection(db, "users", user.uid, "links"),
+        (querySnapshot) => {
+          const cities: Array<{ name: string; url: string }> = [];
+
+          querySnapshot.forEach((doc) => {
+            cities.push({ name: doc.data().name, url: doc.data().url });
+          });
+          setLinks(cities);
+        }
+      );
+
+      return () => unsub();
+    }
+    return;
+  }, [user]);
+
+  // functions
+  const deleteLink = async (name: string) => {
+    await deleteDoc(doc(db, "users", user?.uid!!, "links", name));
+  };
 
   if (!user) return <></>;
+
   return (
     <>
       <Head>
-        <title></title>
+        <title>Desktop</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
@@ -67,7 +75,7 @@ export default function Home() {
         <div className="p-2 gap-2 flex flex-col">
           <button
             onClick={() => setShowAddLinkForm(true)}
-            className="w-36 bg-sky-500 text-white p-2 rounded-md"
+            className="w-36 bg-zinc-500 text-white p-2 rounded-md"
           >
             Add Link
           </button>

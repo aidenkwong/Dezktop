@@ -1,23 +1,20 @@
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "firebase/auth";
+import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
 import Router from "next/router";
-import { useContext, useEffect } from "react";
-import firebaseApp from "../../firebase/firebase";
-import { UserContext, UserUpdateContext } from "../../provider/UserProvider";
+import { useContext } from "react";
+import { firebaseApp } from "../../firebase/firebase";
+import { UserUpdateContext } from "../../provider/UserProvider";
 
 const provider = new GoogleAuthProvider();
 const auth = getAuth(firebaseApp);
 
 const Auth = () => {
-  const user = useContext(UserContext);
+  // useContext
   const updateUser = useContext(UserUpdateContext);
 
+  // functions
   const signIn = async () => {
     const { user } = await signInWithPopup(auth, provider);
+
     updateUser(user);
     Router.push("/");
   };
