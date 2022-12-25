@@ -1,4 +1,10 @@
-import { doc, getFirestore, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getCountFromServer,
+  getFirestore,
+  setDoc,
+} from "firebase/firestore";
 import { FormEvent, useContext, useEffect, useRef, useState } from "react";
 import { UserContext } from "../provider/UserProvider";
 import { firebaseApp } from "../firebase/firebase";
@@ -9,12 +15,13 @@ const AddLinkForm = ({ setShowAddLinkForm }: any) => {
   // useState
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // useRef
   const formRef = useRef(null);
 
   // useContext
-  const user = useContext(UserContext);
+  const { user } = useContext(UserContext);
 
   // hooks
   const useOutside = (ref: any) => {
@@ -37,11 +44,20 @@ const AddLinkForm = ({ setShowAddLinkForm }: any) => {
 
   // functions
   const handleSubmit = async (e: FormEvent) => {
+    setLoading(true);
     e.preventDefault();
+    const coll = collection(db, "users", user?.uid!!, "links");
+    const snapshot = await getCountFromServer(coll);
+    const index = snapshot.data().count + 1;
+
+    setShowAddLinkForm(false);
+
     await setDoc(doc(db, "users", user?.uid!!, "links", name), {
+      index,
       name,
       url,
     });
+    setLoading(false);
   };
 
   return (
@@ -53,6 +69,7 @@ const AddLinkForm = ({ setShowAddLinkForm }: any) => {
       <div className="gap-2 flex justify-between">
         <label htmlFor="name">name</label>
         <input
+          autoFocus={true}
           className="border-zinc-900 border-2 outline-0 p-1 text-black"
           onChange={(e) => setName(e.target.value)}
         />
@@ -64,7 +81,11 @@ const AddLinkForm = ({ setShowAddLinkForm }: any) => {
           onChange={(e) => setUrl(e.target.value)}
         />
       </div>
-      <button className="bg-zinc-900 text-white p-2 rounded-md" type="submit">
+      <button
+        className="bg-zinc-900 text-white p-2 rounded-md"
+        type="submit"
+        disabled={loading}
+      >
         Add Link
       </button>
     </form>

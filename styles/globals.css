@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.sortable-ghost {
+  background-color: #7dd3fc;
+  opacity: 0.5;
+}
+.sortable-drag {
+  opacity: 0.1;
+}

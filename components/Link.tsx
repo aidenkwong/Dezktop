@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const Link = ({ name, url, deleteLink }: any) => {
+const Link = ({ index, name, url, type, deleteLink }: any) => {
   // useState
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -33,7 +33,6 @@ const Link = ({ name, url, deleteLink }: any) => {
         target="_blank"
         href={url}
         key={name}
-        className="border-zinc-700 border-2 h-32 justify-between p-1 text-black"
         onContextMenu={(e) => {
           e.preventDefault();
           setShowMenu(true);
@@ -42,13 +41,16 @@ const Link = ({ name, url, deleteLink }: any) => {
           return false;
         }}
         rel="noreferrer"
+        draggable="true"
+        data-index={index}
+        className="flex w-full h-full"
       >
         <div>{name}</div>
       </a>
       {showMenu && (
         <div
           ref={menuRef}
-          className="absolute bg-gray-200 p-2 "
+          className="absolute bg-zinc-300 p-2 text-center rounded shadow-lg"
           style={{
             left: menuPosition.x + window.scrollX,
             top: menuPosition.y + window.scrollY,

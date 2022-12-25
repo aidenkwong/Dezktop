@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {},
     gridTemplateColumns: {
-      "auto-240": "repeat(auto-fit, minmax(240px, 1fr))",
+      "auto-224": "repeat(auto-fit, 224px)",
     },
   },
   plugins: [require("@shrutibalasa/tailwind-grid-auto-fit")],
