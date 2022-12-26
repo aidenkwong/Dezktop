@@ -1,4 +1,9 @@
-import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
@@ -7,9 +12,6 @@ import { ReactSortable } from "react-sortablejs";
 
 const Links = () => {
   // useState
-  const [links, setLinks] = useState<
-    Array<{ id: number; name: string; url: string }>
-  >([]);
   const [loading, setLoading] = useState(false);
   const [bookmarksFromFile, setBookmarksFromFile] = useState<Array<any>>([]);
 
@@ -19,18 +21,13 @@ const Links = () => {
   useEffect(() => {
     if (user?.uid) {
       const unsub = onSnapshot(
-        collection(firebaseDB, "users", user.uid, "links"),
+        doc(firebaseDB, "users", user?.uid!!),
         (querySnapshot) => {
-          const links: Array<{ id: number; name: string; url: string }> = [];
+          const data = querySnapshot.data();
 
-          querySnapshot.forEach((doc) => {
-            links.push({
-              id: doc.data().index || links.length,
-              name: doc.data().name,
-              url: doc.data().url,
-            });
-          });
-          setLinks(links.sort((a, b) => a.id - b.id));
+          if (data) {
+            setBookmarksFromFile(data.bookmarks);
+          }
         }
       );
 
@@ -39,23 +36,35 @@ const Links = () => {
     return;
   }, [user]);
 
-  const handleOnEnd = async (event: any) => {
-    // setLoading(true);
-    // const { newIndex, oldIndex } = event;
-    // const newLinks = [...links];
-    // const movedLink = newLinks.splice(oldIndex, 1)[0];
-    // newLinks.splice(newIndex, 0, movedLink);
-    // setLinks(newLinks);
-    // newLinks.forEach(async (link, index) => {
-    //   await updateDoc(
-    //     doc(firebaseDB, "users", user?.uid!!, "links", link.name),
-    //     {
-    //       index,
-    //     }
-    //   );
-    // });
-    // setLoading(false);
-  };
+  useEffect(() => {
+    setLoading(true);
+    if (bookmarksFromFile.length > 1) {
+      (async () => {
+        await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
+          bookmarks: bookmarksFromFile,
+        });
+      })();
+    }
+
+    bookmarksFromFile.sort((a, b) => {
+      const nameA = a.type.toUpperCase(); // ignore upper and lowercase
+      const nameB = b.type.toUpperCase(); // ignore upper and lowercase
+
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    });
+
+    setLoading(false);
+  }, [bookmarksFromFile, user?.uid]);
+
+  const handleOnEnd = async () => {};
 
   // functions
   const deleteLink = async (name: string) => {
