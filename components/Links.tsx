@@ -1,22 +1,21 @@
-import {
-  deleteDoc,
-  doc,
-  onSnapshot,
-  updateDoc,
-} from "firebase/firestore";
-import { useContext, useEffect, useState } from "react";
+import { deleteDoc, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { useContext, useEffect, useRef, useState } from "react";
 import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
 import Link from "./Link";
-import { ReactSortable } from "react-sortablejs";
 
 const Links = () => {
   // useState
   const [loading, setLoading] = useState(false);
-  const [bookmarksFromFile, setBookmarksFromFile] = useState<Array<any>>([]);
+  const [links, setLinks] = useState<Array<any>>([]);
+
+  // useRef
+  const linksRef = useRef<Array<HTMLDivElement | null>>([]);
 
   // useContext
   const { user } = useContext(UserContext);
+
+  // functions
 
   useEffect(() => {
     if (user?.uid) {
@@ -26,7 +25,7 @@ const Links = () => {
           const data = querySnapshot.data();
 
           if (data) {
-            setBookmarksFromFile(data.bookmarks);
+            setLinks(data.bookmarks);
           }
         }
       );
@@ -38,33 +37,176 @@ const Links = () => {
 
   useEffect(() => {
     setLoading(true);
-    if (bookmarksFromFile.length > 1) {
-      (async () => {
-        await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
-          bookmarks: bookmarksFromFile,
-        });
-      })();
-    }
+    // if (links.length > 1) {
+    //   (async () => {
+    //     await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
+    //       bookmarks: links,
+    //     });
+    //   })();
+    // }
 
-    bookmarksFromFile.sort((a, b) => {
-      const nameA = a.type.toUpperCase(); // ignore upper and lowercase
-      const nameB = b.type.toUpperCase(); // ignore upper and lowercase
-
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) {
-        return 1;
-      }
-
-      // names must be equal
-      return 0;
+    links.sort((a, b) => {
+      return a.type.localeCompare(b.type);
     });
 
     setLoading(false);
-  }, [bookmarksFromFile, user?.uid]);
+    console.log(
+      links.map((link) => ({
+        name: link.name,
+        type: link.type,
+        ...(link.type === "folder" &&
+          link.children && {
+            children: link.children,
+          }),
+      }))
+    );
+  }, [links, user?.uid]);
 
-  const handleOnEnd = async () => {};
+  useEffect(() => {
+    let dragStartId: string;
+    const handleDragStart = (e: any) => {
+      console.dir("dragstart key: " + e.target.getAttribute("data-id"));
+      dragStartId = e.target.getAttribute("data-id");
+    };
+
+    const handleDragEnter = (e: any) => {
+      console.dir("dragenter key: " + e.target.getAttribute("data-id"));
+      const dragOverIdx = e.target.getAttribute("data-id");
+      const idx = links.findIndex(
+        (link) => link.name === dragOverIdx && link.type === "folder"
+      );
+
+      linksRef.current[idx]?.classList.add("scale-105");
+      linksRef.current[idx]?.classList.replace("bg-sky-300", "bg-sky-400");
+      linksRef.current[idx]?.classList.replace(
+        "border-sky-500",
+        "border-sky-900"
+      );
+    };
+
+    const handleDragLeave = (e: any) => {
+      console.dir("dragleave key: " + e.target.getAttribute("data-id"));
+      const dragOverIdx = e.target.getAttribute("data-id");
+      const idx = links.findIndex(
+        (link) => link.name === dragOverIdx && link.type === "folder"
+      );
+
+      linksRef.current[idx]?.classList.remove("scale-105");
+      linksRef.current[idx]?.classList.replace("bg-sky-400", "bg-sky-300");
+      linksRef.current[idx]?.classList.replace(
+        "border-sky-900",
+        "border-sky-500"
+      );
+    };
+
+    const handleDragOver = (e: any) => {
+      e.preventDefault();
+      console.dir("dragover key: " + e.target.getAttribute("data-id"));
+      const dragOverIdx = e.target.getAttribute("data-id");
+      const idx = links.findIndex(
+        (link) => link.name === dragOverIdx && link.type === "folder"
+      );
+
+      linksRef.current[idx]?.classList.add("scale-105");
+      linksRef.current[idx]?.classList.replace("bg-sky-300", "bg-sky-400");
+      linksRef.current[idx]?.classList.replace(
+        "border-sky-500",
+        "border-sky-900"
+      );
+    };
+
+    const handleDrop = (e: any) => {
+      e.preventDefault();
+
+      console.log("drop key: " + e?.target?.getAttribute("data-id"));
+      const dropKey = e.target.getAttribute("data-id");
+      const idx = links.findIndex(
+        (link) => link.name === dropKey && link.type === "folder"
+      );
+
+      const dragStartKey = dragStartId;
+      const movedLink = links.find((link) => link.name === dragStartKey);
+      let tmpLinks = links.filter((link) => link.name !== dragStartKey);
+
+      console.log({ movedLink });
+      tmpLinks.find((link) => link.name === dropKey)?.children.push(movedLink);
+
+      setLinks(tmpLinks);
+
+      linksRef.current[idx]?.classList.remove("scale-105");
+      linksRef.current[idx]?.classList.replace("bg-sky-400", "bg-sky-300");
+      linksRef.current[idx]?.classList.replace(
+        "border-sky-900",
+        "border-sky-500"
+      );
+    };
+
+    linksRef.current = linksRef?.current?.slice(0, links.length);
+    for (let i = 0; i < links.length; i++) {
+      if (links[i].type === "url") {
+        linksRef.current[i]?.addEventListener("dragstart", handleDragStart);
+      }
+      if (links[i].type === "folder") {
+        linksRef.current[i]?.addEventListener("dragenter", handleDragEnter);
+        linksRef.current[i]?.addEventListener("dragleave", handleDragLeave);
+        linksRef.current[i]?.addEventListener("drop", handleDrop);
+      }
+
+      linksRef.current[i]?.addEventListener("dragover", handleDragOver);
+    }
+
+    return () => {
+      for (let i = 0; i < links.length; i++) {
+        if (links[i].type === "url") {
+          linksRef.current[i]?.removeEventListener(
+            "dragstart",
+            handleDragStart
+          );
+        }
+        if (links[i].type === "folder") {
+          linksRef.current[i]?.removeEventListener(
+            "dragenter",
+            handleDragEnter
+          );
+          linksRef.current[i]?.removeEventListener(
+            "dragleave",
+            handleDragLeave
+          );
+          linksRef.current[i]?.removeEventListener("drop", handleDrop);
+        }
+
+        linksRef.current[i]?.removeEventListener("dragover", handleDragOver);
+      }
+    };
+  }, [links]);
+
+  // useEffect(() => {
+  //   const folders = document.getElementsByClassName("folder");
+
+  //   for (let i = 0; i < folders.length; i++) {
+  //     folders[i].addEventListener("drop", (e: any) => {
+  //       console.log(e.target.getAttribute("data-index"));
+  //     });
+  //   }
+
+  //   return () => {
+  //     for (let i = 0; i < folders.length; i++) {
+  //       folders[i].removeEventListener("drop", (e: any) => {
+  //         console.log(e.target.getAttribute("data-index"));
+  //       });
+  //     }
+  //   };
+  // }, [linksRef]);
+
+  // const handleOnMove = (
+  //   evt: MoveEvent,
+  //   originalEvent: Event,
+  //   sortable: Sortable | null,
+  //   store: Store
+  // ) => {
+  //   console.log(evt.dragged);
+  //   console.log(evt.relatedRect);
+  // };
 
   // functions
   const deleteLink = async (name: string) => {
@@ -75,30 +217,31 @@ const Links = () => {
     const file = e.target.files[0];
     const fileJson = JSON.parse(await file.text());
 
-    setBookmarksFromFile(fileJson.roots.bookmark_bar.children);
+    setLinks(fileJson.roots.bookmark_bar.children);
   };
 
   return (
     <div>
-      <ReactSortable
-        list={bookmarksFromFile}
-        setList={setBookmarksFromFile}
+      {/* <ReactSortable
+        list={links}
+        setList={setLinks}
         className="grid grid-cols-auto-224 gap-2"
         swap
         animation={150}
-        onEnd={handleOnEnd}
+        // onMove={handleOnMove}
         disabled={loading}
         easing="cubic-bezier(1, 0, 0, 1)"
         draggable=".draggable"
       >
-        {bookmarksFromFile.map((link, index) => (
+        {links.map((link, index) => (
           <div
+            ref={(el) => (linksRef.current[index] = el)}
             key={index}
             data-index={index}
             className={`h-32 w-full justify-between p-1 text-black rounded  ${
               link.type === "url"
                 ? "draggable bg-zinc-300"
-                : "bg-sky-300 border-2 border-sky-500"
+                : "folder bg-sky-300 border-2 border-sky-500"
             }`}
           >
             <Link
@@ -110,12 +253,33 @@ const Links = () => {
             />
           </div>
         ))}
-      </ReactSortable>
+      </ReactSortable> */}
+      <div className="grid gap-2 grid-cols-auto-224">
+        {links.map((link, index) => (
+          <div
+            key={index}
+            className={`h-32 w-full justify-between p-1 text-black rounded ease-in-out duration-300  ${
+              link.type === "url"
+                ? "draggable bg-zinc-300"
+                : "folder bg-sky-300 border-2 border-sky-500"
+            }`}
+            data-id={link.name}
+            ref={(el) => (linksRef.current[index] = el)}
+          >
+            <Link
+              key={link.name}
+              index={index}
+              name={link.name}
+              url={link.url}
+              deleteLink={deleteLink}
+            />
+          </div>
+        ))}
+      </div>
+
       <p>%LocalAppData%\Google\Chrome\User Data\Default\Bookmarks</p>
+      <p>~/Library/Application\ Support/Google/Chrome/Default/Bookmarks</p>
       <input type="file" onChange={fileOnChange} />
-      {bookmarksFromFile?.map((bookmark: any, index: number) => {
-        return <div key={index}>{bookmark?.name}</div>;
-      })}
     </div>
   );
 };
