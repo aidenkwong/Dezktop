@@ -43,14 +43,12 @@ const Link = ({ name, url, deleteLink }: any) => {
         }}
         rel="noreferrer"
         draggable="true"
-
-        // className="flex w-full h-full"
       >
         <div className="flex w-full h-full" data-id={name}>
           {name}
         </div>
       </a>
-      {showMenu && (
+      {showMenu && ( // Menu when left click
         <div
           ref={menuRef}
           className="absolute bg-zinc-300 p-2 text-center rounded shadow-lg"

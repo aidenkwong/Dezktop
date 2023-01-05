@@ -7,7 +7,9 @@ import Link from "./Link";
 const Links = () => {
   // useState
   const [loading, setLoading] = useState(false);
+  const [allLinks, setAllLinks] = useState<Array<any>>([]);
   const [links, setLinks] = useState<Array<any>>([]);
+  const [directory, setDirectory] = useState<Array<string>>([]);
 
   // useRef
   const linksRef = useRef<Array<HTMLDivElement | null>>([]);
@@ -25,7 +27,7 @@ const Links = () => {
           const data = querySnapshot.data();
 
           if (data) {
-            setLinks(data.bookmarks);
+            setAllLinks(data.bookmarks);
           }
         }
       );
@@ -50,17 +52,23 @@ const Links = () => {
     });
 
     setLoading(false);
-    console.log(
-      links.map((link) => ({
-        name: link.name,
-        type: link.type,
-        ...(link.type === "folder" &&
-          link.children && {
-            children: link.children,
-          }),
-      }))
-    );
   }, [links, user?.uid]);
+
+  useEffect(() => {
+    let tmpLinks = allLinks;
+
+    console.log(directory, tmpLinks);
+    for (let i = 0; i < directory.length; i++) {
+      const idx = tmpLinks.findIndex(
+        (link) => link.name === directory[i] && link.type === "folder"
+      );
+
+      if (idx !== -1) {
+        tmpLinks = tmpLinks[idx].children;
+      }
+    }
+    setLinks(tmpLinks);
+  }, [allLinks, directory]);
 
   useEffect(() => {
     let dragStartId: string;
@@ -118,7 +126,6 @@ const Links = () => {
     const handleDrop = (e: any) => {
       e.preventDefault();
 
-      console.log("drop key: " + e?.target?.getAttribute("data-id"));
       const dropKey = e.target.getAttribute("data-id");
       const idx = links.findIndex(
         (link) => link.name === dropKey && link.type === "folder"
@@ -128,7 +135,6 @@ const Links = () => {
       const movedLink = links.find((link) => link.name === dragStartKey);
       let tmpLinks = links.filter((link) => link.name !== dragStartKey);
 
-      console.log({ movedLink });
       tmpLinks.find((link) => link.name === dropKey)?.children.push(movedLink);
 
       setLinks(tmpLinks);
@@ -217,7 +223,7 @@ const Links = () => {
     const file = e.target.files[0];
     const fileJson = JSON.parse(await file.text());
 
-    setLinks(fileJson.roots.bookmark_bar.children);
+    setAllLinks(fileJson.roots.bookmark_bar.children);
   };
 
   return (
@@ -254,25 +260,45 @@ const Links = () => {
           </div>
         ))}
       </ReactSortable> */}
+      <div className="my-2">
+        <button
+          className="hover:bg-zinc-200 p-1 rounded-sm"
+          onClick={() => setDirectory([])}
+        >
+          My Bookmarks
+        </button>
+        {directory.map((dir, index) => (
+          <>
+            <i>{"  >  "}</i>
+            <button
+              className="hover:bg-zinc-200 p-1 rounded-sm"
+              key={index}
+              onClick={() => setDirectory(directory.slice(0, index + 1))}
+            >
+              {dir}
+            </button>
+          </>
+        ))}
+      </div>
       <div className="grid gap-2 grid-cols-auto-224">
-        {links.map((link, index) => (
+        {links.map((link: any, index) => (
           <div
             key={index}
-            className={`h-32 w-full justify-between p-1 text-black rounded ease-in-out duration-300  ${
+            className={`h-32 w-full justify-between p-1 text-black rounded transition-transform ease-in-out duration-300 cursor-pointer ${
               link.type === "url"
                 ? "draggable bg-zinc-300"
                 : "folder bg-sky-300 border-2 border-sky-500"
             }`}
             data-id={link.name}
             ref={(el) => (linksRef.current[index] = el)}
+            onClick={() => {
+              if (link.type === "folder") {
+                if (directory[directory.length - 1] === link.name) return;
+                setDirectory((prev) => [...prev, link.name]);
+              }
+            }}
           >
-            <Link
-              key={link.name}
-              index={index}
-              name={link.name}
-              url={link.url}
-              deleteLink={deleteLink}
-            />
+            <Link name={link.name} url={link.url} deleteLink={deleteLink} />
           </div>
         ))}
       </div>
