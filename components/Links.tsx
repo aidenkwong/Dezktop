@@ -1,4 +1,4 @@
-import { deleteDoc, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useContext, useEffect, useRef, useState } from "react";
 import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
@@ -9,10 +9,11 @@ const Links = () => {
   const [loading, setLoading] = useState(false);
   const [allLinks, setAllLinks] = useState<Array<any>>([]);
   const [links, setLinks] = useState<Array<any>>([]);
-  const [directory, setDirectory] = useState<Array<string>>([]);
+  const [directory, setDirectory] = useState<string>("My Bookmarks");
 
   // useRef
   const linksRef = useRef<Array<HTMLDivElement | null>>([]);
+  const directoryRef = useRef<Array<HTMLButtonElement | null>>([]);
 
   // useContext
   const { user } = useContext(UserContext);
@@ -21,31 +22,35 @@ const Links = () => {
 
   useEffect(() => {
     if (user?.uid) {
-      const unsub = onSnapshot(
-        doc(firebaseDB, "users", user?.uid!!),
-        (querySnapshot) => {
-          const data = querySnapshot.data();
+      (async () => {
+        const docRef = doc(firebaseDB, "users", user?.uid!!);
+        const docSnap = await getDoc(docRef);
+        const data = docSnap.data();
 
-          if (data) {
-            setAllLinks(data.bookmarks);
-          }
+        if (data) {
+          setAllLinks([
+            {
+              name: "My Bookmarks",
+              type: "folder",
+              children: data.bookmarks,
+            },
+          ]);
         }
-      );
-
-      return () => unsub();
+      })();
     }
     return;
   }, [user]);
 
   useEffect(() => {
     setLoading(true);
-    // if (links.length > 1) {
-    //   (async () => {
-    //     await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
-    //       bookmarks: links,
-    //     });
-    //   })();
-    // }
+
+    if (links.length > 1) {
+      (async () => {
+        await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
+          bookmarks: links,
+        });
+      })();
+    }
 
     links.sort((a, b) => {
       return a.type.localeCompare(b.type);
@@ -56,109 +61,173 @@ const Links = () => {
 
   useEffect(() => {
     let tmpLinks = allLinks;
+    const directoryArr = directory.split("/");
 
-    console.log(directory, tmpLinks);
-    for (let i = 0; i < directory.length; i++) {
+    for (let i = 0; i < directoryArr.length; i++) {
       const idx = tmpLinks.findIndex(
-        (link) => link.name === directory[i] && link.type === "folder"
+        (link) => link.name === directoryArr[i] && link.type === "folder"
       );
 
-      if (idx !== -1) {
-        tmpLinks = tmpLinks[idx].children;
-      }
+      if (idx === -1) return;
+      tmpLinks = tmpLinks[idx].children;
     }
     setLinks(tmpLinks);
   }, [allLinks, directory]);
 
   useEffect(() => {
-    let dragStartId: string;
+    let dragStartKey: string;
+
     const handleDragStart = (e: any) => {
-      console.dir("dragstart key: " + e.target.getAttribute("data-id"));
-      dragStartId = e.target.getAttribute("data-id");
+      const el = e.currentTarget;
+
+      dragStartKey = el.getAttribute("data-key");
+
+      let crt = el.cloneNode(true);
+
+      crt.setAttribute("id", "crt");
+
+      crt.classList.replace("w-full", "w-44");
+      crt.classList.replace("h-32", "h-fit");
+      crt.classList.add(
+        "border-sky-500",
+        "border-2",
+        "absolute",
+        "-top-64",
+        "-left-64"
+      );
+
+      document.body.appendChild(crt);
+      e.dataTransfer.setDragImage(crt, 0, 0);
     };
 
-    const handleDragEnter = (e: any) => {
-      console.dir("dragenter key: " + e.target.getAttribute("data-id"));
-      const dragOverIdx = e.target.getAttribute("data-id");
-      const idx = links.findIndex(
-        (link) => link.name === dragOverIdx && link.type === "folder"
-      );
-
-      linksRef.current[idx]?.classList.add("scale-105");
-      linksRef.current[idx]?.classList.replace("bg-sky-300", "bg-sky-400");
-      linksRef.current[idx]?.classList.replace(
-        "border-sky-500",
-        "border-sky-900"
-      );
+    const handleDragEnd = (_e: any) => {
+      document.getElementById("crt")?.remove();
     };
 
     const handleDragLeave = (e: any) => {
-      console.dir("dragleave key: " + e.target.getAttribute("data-id"));
-      const dragOverIdx = e.target.getAttribute("data-id");
-      const idx = links.findIndex(
-        (link) => link.name === dragOverIdx && link.type === "folder"
-      );
+      e.preventDefault();
+      const el = e.currentTarget;
 
-      linksRef.current[idx]?.classList.remove("scale-105");
-      linksRef.current[idx]?.classList.replace("bg-sky-400", "bg-sky-300");
-      linksRef.current[idx]?.classList.replace(
-        "border-sky-900",
-        "border-sky-500"
-      );
+      if (el.classList.contains("folder")) {
+        el.classList.remove("scale-105");
+        el.classList.replace("bg-sky-400", "bg-sky-300");
+        el.classList.replace("border-sky-900", "border-sky-500");
+      }
+
+      if (el.classList.contains("directory")) {
+        el.classList.remove("bg-sky-300");
+        el.classList.remove("border-sky-900");
+      }
     };
 
     const handleDragOver = (e: any) => {
       e.preventDefault();
-      console.dir("dragover key: " + e.target.getAttribute("data-id"));
-      const dragOverIdx = e.target.getAttribute("data-id");
-      const idx = links.findIndex(
-        (link) => link.name === dragOverIdx && link.type === "folder"
-      );
+      const el = e.currentTarget;
 
-      linksRef.current[idx]?.classList.add("scale-105");
-      linksRef.current[idx]?.classList.replace("bg-sky-300", "bg-sky-400");
-      linksRef.current[idx]?.classList.replace(
-        "border-sky-500",
-        "border-sky-900"
-      );
+      if (el.classList.contains("folder")) {
+        el.classList.add("scale-105");
+        el.classList.replace("bg-sky-300", "bg-sky-400");
+        el.classList.replace("border-sky-500", "border-sky-900");
+      }
+      if (
+        el.classList.contains("directory") &&
+        el.getAttribute("data-key") !== directory
+      ) {
+        el.classList.add("bg-sky-300");
+        el.classList.add("border-sky-900");
+      }
     };
 
     const handleDrop = (e: any) => {
       e.preventDefault();
 
-      const dropKey = e.target.getAttribute("data-id");
-      const idx = links.findIndex(
-        (link) => link.name === dropKey && link.type === "folder"
+      const el = e.currentTarget;
+      const dropKey = e.currentTarget.getAttribute("data-key");
+
+      if (el.classList.contains("folder")) {
+        el.classList.remove("scale-105");
+        el.classList.replace("bg-sky-400", "bg-sky-300");
+        el.classList.replace("border-sky-900", "border-sky-500");
+      }
+      if (el.classList.contains("directory")) {
+        el.classList.remove("bg-sky-300");
+        el.classList.remove("border-sky-900");
+      }
+
+      if (dropKey === directory) return;
+
+      const movedLink = links.find(
+        (link) =>
+          link.name ===
+          dragStartKey.split("/")[dragStartKey.split("/").length - 1]
       );
 
-      const dragStartKey = dragStartId;
-      const movedLink = links.find((link) => link.name === dragStartKey);
-      let tmpLinks = links.filter((link) => link.name !== dragStartKey);
+      let tmpAllLinks = allLinks;
 
-      tmpLinks.find((link) => link.name === dropKey)?.children.push(movedLink);
+      const dfsDelete = (arr: any[], dir: string) => {
+        const curDirArr = dir.split("/");
 
-      setLinks(tmpLinks);
+        if (curDirArr.length === 2) {
+          arr.find((link) => link.name === curDirArr[0]).children = arr
+            .find((link) => link.name === curDirArr[0])
+            .children.filter((link: any) => link.name !== curDirArr[1]);
 
-      linksRef.current[idx]?.classList.remove("scale-105");
-      linksRef.current[idx]?.classList.replace("bg-sky-400", "bg-sky-300");
-      linksRef.current[idx]?.classList.replace(
-        "border-sky-900",
-        "border-sky-500"
-      );
+          return;
+        }
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].name === curDirArr[0]) {
+            dfsDelete(arr[i].children, curDirArr.slice(1).join("/"));
+          }
+        }
+      };
+
+      dfsDelete(tmpAllLinks, dragStartKey);
+
+      const dfsAppend = (arr: any[], dir: string) => {
+        // My Bookmarks, foo, bar
+        const curDirArr = dir.split("/");
+
+        if (curDirArr.length === 1) {
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i].name === curDirArr[0]) {
+              arr[i].children.push(movedLink);
+            }
+          }
+        }
+
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].name === curDirArr[0]) {
+            dfsAppend(arr[i].children, curDirArr.slice(1).join("/"));
+          }
+        }
+
+        return arr;
+      };
+
+      dfsAppend(tmpAllLinks, dropKey);
+
+      setAllLinks([...tmpAllLinks]);
     };
 
     linksRef.current = linksRef?.current?.slice(0, links.length);
     for (let i = 0; i < links.length; i++) {
       if (links[i].type === "url") {
         linksRef.current[i]?.addEventListener("dragstart", handleDragStart);
+        linksRef.current[i]?.addEventListener("dragend", handleDragEnd);
       }
       if (links[i].type === "folder") {
-        linksRef.current[i]?.addEventListener("dragenter", handleDragEnter);
         linksRef.current[i]?.addEventListener("dragleave", handleDragLeave);
         linksRef.current[i]?.addEventListener("drop", handleDrop);
       }
 
       linksRef.current[i]?.addEventListener("dragover", handleDragOver);
+    }
+
+    directoryRef.current = directoryRef?.current?.slice(0, directory.length);
+    for (let i = 0; i < directory.length; i++) {
+      directoryRef.current[i]?.addEventListener("dragover", handleDragOver);
+      directoryRef.current[i]?.addEventListener("dragleave", handleDragLeave);
+      directoryRef.current[i]?.addEventListener("drop", handleDrop);
     }
 
     return () => {
@@ -168,12 +237,9 @@ const Links = () => {
             "dragstart",
             handleDragStart
           );
+          linksRef.current[i]?.removeEventListener("dragend", handleDragEnd);
         }
         if (links[i].type === "folder") {
-          linksRef.current[i]?.removeEventListener(
-            "dragenter",
-            handleDragEnter
-          );
           linksRef.current[i]?.removeEventListener(
             "dragleave",
             handleDragLeave
@@ -183,36 +249,19 @@ const Links = () => {
 
         linksRef.current[i]?.removeEventListener("dragover", handleDragOver);
       }
+      for (let i = 0; i < directory.length; i++) {
+        directoryRef.current[i]?.removeEventListener(
+          "dragover",
+          handleDragOver
+        );
+        directoryRef.current[i]?.removeEventListener(
+          "dragleave",
+          handleDragLeave
+        );
+        directoryRef.current[i]?.removeEventListener("drop", handleDrop);
+      }
     };
-  }, [links]);
-
-  // useEffect(() => {
-  //   const folders = document.getElementsByClassName("folder");
-
-  //   for (let i = 0; i < folders.length; i++) {
-  //     folders[i].addEventListener("drop", (e: any) => {
-  //       console.log(e.target.getAttribute("data-index"));
-  //     });
-  //   }
-
-  //   return () => {
-  //     for (let i = 0; i < folders.length; i++) {
-  //       folders[i].removeEventListener("drop", (e: any) => {
-  //         console.log(e.target.getAttribute("data-index"));
-  //       });
-  //     }
-  //   };
-  // }, [linksRef]);
-
-  // const handleOnMove = (
-  //   evt: MoveEvent,
-  //   originalEvent: Event,
-  //   sortable: Sortable | null,
-  //   store: Store
-  // ) => {
-  //   console.log(evt.dragged);
-  //   console.log(evt.relatedRect);
-  // };
+  }, [allLinks, directory, links]);
 
   // functions
   const deleteLink = async (name: string) => {
@@ -223,82 +272,67 @@ const Links = () => {
     const file = e.target.files[0];
     const fileJson = JSON.parse(await file.text());
 
-    setAllLinks(fileJson.roots.bookmark_bar.children);
+    setAllLinks([
+      {
+        name: "My Bookmarks",
+        children: fileJson.roots.bookmark_bar.children,
+        type: "folder",
+      },
+    ]);
   };
 
   return (
     <div>
-      {/* <ReactSortable
-        list={links}
-        setList={setLinks}
-        className="grid grid-cols-auto-224 gap-2"
-        swap
-        animation={150}
-        // onMove={handleOnMove}
-        disabled={loading}
-        easing="cubic-bezier(1, 0, 0, 1)"
-        draggable=".draggable"
-      >
-        {links.map((link, index) => (
-          <div
-            ref={(el) => (linksRef.current[index] = el)}
-            key={index}
-            data-index={index}
-            className={`h-32 w-full justify-between p-1 text-black rounded  ${
-              link.type === "url"
-                ? "draggable bg-zinc-300"
-                : "folder bg-sky-300 border-2 border-sky-500"
-            }`}
-          >
-            <Link
-              key={link.name}
-              index={index}
-              name={link.name}
-              url={link.url}
-              deleteLink={deleteLink}
-            />
-          </div>
-        ))}
-      </ReactSortable> */}
       <div className="my-2">
-        <button
-          className="hover:bg-zinc-200 p-1 rounded-sm"
-          onClick={() => setDirectory([])}
-        >
-          My Bookmarks
-        </button>
-        {directory.map((dir, index) => (
-          <>
-            <i>{"  >  "}</i>
+        {directory.split("/").map((dir, index) => (
+          <span key={index}>
+            {index !== 0 && <i>{"  >  "}</i>}
             <button
-              className="hover:bg-zinc-200 p-1 rounded-sm"
+              className="directory hover:bg-zinc-200 py-2 px-3 rounded-full"
+              data-key={directory
+                .split("/")
+                .slice(0, index + 1)
+                .join("/")}
+              ref={(el) => (directoryRef.current[index] = el)}
               key={index}
-              onClick={() => setDirectory(directory.slice(0, index + 1))}
+              onClick={() =>
+                setDirectory(
+                  directory
+                    .split("/")
+                    .slice(0, index + 1)
+                    .join("/")
+                )
+              }
             >
               {dir}
             </button>
-          </>
+          </span>
         ))}
       </div>
       <div className="grid gap-2 grid-cols-auto-224">
         {links.map((link: any, index) => (
           <div
             key={index}
-            className={`h-32 w-full justify-between p-1 text-black rounded transition-transform ease-in-out duration-300 cursor-pointer ${
-              link.type === "url"
-                ? "draggable bg-zinc-300"
-                : "folder bg-sky-300 border-2 border-sky-500"
-            }`}
-            data-id={link.name}
+            data-key={directory + "/" + link.name}
             ref={(el) => (linksRef.current[index] = el)}
             onClick={() => {
               if (link.type === "folder") {
-                if (directory[directory.length - 1] === link.name) return;
-                setDirectory((prev) => [...prev, link.name]);
+                setDirectory((prev) => prev + "/" + link.name);
               }
             }}
+            draggable={link.type === "url" && loading === false}
+            className={`h-32 w-full justify-between p-1 text-black rounded cursor-pointer ${
+              link.type === "url"
+                ? "bg-zinc-300 "
+                : "folder bg-sky-300 border-2 border-sky-500 transition-transform ease-in-out duration-300"
+            }`}
           >
-            <Link name={link.name} url={link.url} deleteLink={deleteLink} />
+            <Link
+              name={link.name}
+              type={link.type}
+              url={link.url}
+              deleteLink={deleteLink}
+            />
           </div>
         ))}
       </div>
