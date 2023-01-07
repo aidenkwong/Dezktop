@@ -13,7 +13,9 @@ export const useThemeContext = () => {
   if (!context) {
     throw new Error("useThemeContext used outside ThemeContext provider");
   }
+
   useEffect(() => {
+    localStorage.setItem("theme", context.theme);
     document.body.classList.value =
       "transition-colors ease-in-out duration-200";
     document.body.classList.add(`theme-${context.theme}`);
@@ -24,6 +26,10 @@ export const useThemeContext = () => {
 
 const ThemeProvider = ({ children }: any) => {
   const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    localStorage.getItem("theme") && setTheme(localStorage.getItem("theme")!!);
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

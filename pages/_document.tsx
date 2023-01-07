@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { ThemeContext } from "../provider/ThemeProvider";
 
 export default function Document() {
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
 
   return (
     <Html lang="en">

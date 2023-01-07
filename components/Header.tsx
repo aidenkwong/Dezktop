@@ -5,7 +5,7 @@ import { firebaseApp } from "../firebase/firebase";
 import Image from "next/image";
 import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
-import { LightFilled } from "@carbon/icons-react";
+import { MdLightMode, MdDarkMode } from "react-icons/md";
 
 const auth = getAuth(firebaseApp);
 
@@ -26,13 +26,23 @@ const Header = () => {
       <p className="text-2xl content-center grid">Desktop</p>
       <div className="flex gap-4 align-middle ">
         <div className="content-center grid">
-          <LightFilled
-            size={24}
-            className="cursor-pointer"
-            onClick={() => {
-              setTheme(theme === "light" ? "dark" : "light");
-            }}
-          />
+          {theme === "light" ? (
+            <MdDarkMode
+              size={24}
+              className="cursor-pointer"
+              onClick={() => {
+                setTheme("dark");
+              }}
+            />
+          ) : (
+            <MdLightMode
+              size={24}
+              className="cursor-pointer"
+              onClick={() => {
+                setTheme("light");
+              }}
+            />
+          )}
         </div>
         <div className="content-center grid">
           <p>{user?.displayName}</p>

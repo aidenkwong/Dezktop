@@ -1,4 +1,4 @@
-import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useContext, useEffect, useRef, useState } from "react";
 import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
@@ -44,20 +44,24 @@ const Links = () => {
   useEffect(() => {
     setLoading(true);
 
-    if (links.length > 1) {
+    if (allLinks.length > 0 && user?.uid) {
       (async () => {
-        await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
-          bookmarks: links,
-        });
+        try {
+          await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
+            bookmarks: allLinks[0].children,
+          });
+        } catch (error: any) {
+          if (error.code === "not-found") {
+            await setDoc(doc(firebaseDB, "users", user?.uid!!), {
+              bookmarks: allLinks[0].children,
+            });
+          }
+        }
       })();
     }
 
-    links.sort((a, b) => {
-      return a.type.localeCompare(b.type);
-    });
-
     setLoading(false);
-  }, [links, user?.uid]);
+  }, [allLinks, user?.uid]);
 
   useEffect(() => {
     let tmpLinks = allLinks;
@@ -76,6 +80,10 @@ const Links = () => {
 
   useEffect(() => {
     let dragStartKey: string;
+
+    links.sort((a, b) => {
+      return a.type.localeCompare(b.type);
+    });
 
     const handleDragStart = (e: any) => {
       const el = e.currentTarget;
@@ -287,7 +295,7 @@ const Links = () => {
               className={`directory ${
                 index !== directory.split("/").length - 1 &&
                 "hover:bg-foreground2Hover"
-              } py-2 px-3 rounded-full bg-foreground2 text-content border-2 border-transparent`}
+              } py-2 px-3 rounded-full bg-foreground2 text-content border-2 border-transparent leading-3`}
               data-key={directory
                 .split("/")
                 .slice(0, index + 1)
@@ -327,9 +335,25 @@ const Links = () => {
         ))}
       </div>
 
-      <p>%LocalAppData%\Google\Chrome\User Data\Default\Bookmarks</p>
-      <p>~/Library/Application Support/Google/Chrome/Default/Bookmarks</p>
-      <input type="file" onChange={fileOnChange} />
+      <div className="bg-foreground my-2 p-2 w-fit rounded">
+        <p>
+          To import your bookmarks from chrome, upload the file in the following
+          path of your computer:
+        </p>
+        <p className="flex gap-2">
+          Windows:{" "}
+          <p className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
+            %LocalAppData%\Google\Chrome\User Data\Default\Bookmarks
+          </p>
+        </p>
+        <p className="flex gap-2">
+          Mac:{" "}
+          <p className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
+            ~/Library/Application Support/Google/Chrome/Default/Bookmarks
+          </p>
+        </p>
+        <input type="file" onChange={fileOnChange} />
+      </div>
     </div>
   );
 };

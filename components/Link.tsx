@@ -1,4 +1,6 @@
+import { MdFolderOpen } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const Link = ({
   name,
@@ -60,13 +62,32 @@ const Link = ({
           return false;
         }}
         rel="noreferrer"
-        className={` h-32 w-full justify-between p-2 text-content rounded cursor-pointer transition-all ease-in-out duration-300 ${
+        className={`flex gap-2 h-32 w-full p-2 text-content rounded cursor-pointer transition-all ease-in-out duration-300 ${
           type === "url"
             ? "bg-foreground2 hover:bg-foreground2Hover"
             : "folder bg-foreground border-2 border-foreground2"
         }`}
       >
-        {name}
+        <div className="flex">
+          {type === "folder" ? (
+            <i>
+              <MdFolderOpen size={24} />
+            </i>
+          ) : (
+            <div className="mt-1 w-4 h-4 mr-2">
+              <Image
+                alt={`favicon of ${url}`}
+                src={
+                  "https://s2.googleusercontent.com/s2/favicons?domain=" + url
+                }
+                width={16}
+                height={16}
+                className=""
+              />
+            </div>
+          )}
+          <div className="w-fit"> {name}</div>
+        </div>
       </a>
       {showMenu && ( // Menu when left click
         <div
