@@ -1,6 +1,10 @@
-import { Head, Html, Main, NextScript } from 'next/document'
+import { Head, Html, Main, NextScript } from "next/document";
+import { useContext } from "react";
+import { ThemeContext } from "../provider/ThemeProvider";
 
 export default function Document() {
+  const { theme, setTheme } = useContext(ThemeContext);
+
   return (
     <Html lang="en">
       <Head />
@@ -9,5 +13,5 @@ export default function Document() {
         <NextScript />
       </body>
     </Html>
-  )
+  );
 }

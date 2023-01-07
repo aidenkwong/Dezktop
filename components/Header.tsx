@@ -4,12 +4,14 @@ import { useContext } from "react";
 import { firebaseApp } from "../firebase/firebase";
 import Image from "next/image";
 import { UserContext } from "../provider/UserProvider";
+import { ThemeContext } from "../provider/ThemeProvider";
 
 const auth = getAuth(firebaseApp);
 
 const Header = () => {
   // useContext
   const { user, setUser } = useContext(UserContext);
+  const { theme, setTheme } = useContext(ThemeContext);
 
   // functions
   const signOut = async () => {
@@ -19,7 +21,9 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-zinc-900 text-white h-12 justify-between flex content-center px-2">
+    <div
+      className={`bg-${theme}-400 text-black h-12 justify-between flex content-center px-2`}
+    >
       <p className="text-2xl content-center grid">Desktop</p>
       <div className="flex gap-4 align-middle">
         <div className="content-center grid">
@@ -38,7 +42,7 @@ const Header = () => {
         </div>
 
         <button
-          className="content-center grid hover:text-sky-400"
+          className={`content-center grid hover:text-${theme}-800`}
           onClick={signOut}
         >
           sign out

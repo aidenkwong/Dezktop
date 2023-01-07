@@ -6,12 +6,14 @@ import Router from "next/router";
 import AddLinkForm from "../components/AddLinkForm";
 import { User } from "firebase/auth";
 import Links from "../components/Links";
+import { ThemeContext } from "../provider/ThemeProvider";
 
 export default function Home() {
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
 
   // useContext
   const { user, setUser } = useContext(UserContext);
+  const { theme, setTheme } = useContext(ThemeContext);
 
   // useEffect
   useEffect(() => {
@@ -35,12 +37,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
+      <main className={theme}>
         <Header />
-        <div className="p-2 gap-2 flex flex-col">
+        <div className={`p-2 gap-2 flex flex-col bg-${theme}-500`}>
           <button
             onClick={() => setShowAddLinkForm(true)}
-            className="w-36 bg-zinc-900 text-white p-2 rounded-md hover:text-sky-400"
+            className={`w-36 bg-${theme}-200 text-${theme}-500 p-2 rounded hover:text-${theme}-900 hover:bg-${theme}-100`}
           >
             Add Link
           </button>

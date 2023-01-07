@@ -1,6 +1,7 @@
 import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useContext, useEffect, useRef, useState } from "react";
 import { firebaseDB } from "../firebase/firebase";
+import { ThemeContext } from "../provider/ThemeProvider";
 import { UserContext } from "../provider/UserProvider";
 import Link from "./Link";
 
@@ -17,6 +18,7 @@ const Links = () => {
 
   // useContext
   const { user } = useContext(UserContext);
+  const { theme } = useContext(ThemeContext);
 
   // functions
 
@@ -82,6 +84,7 @@ const Links = () => {
 
       dragStartKey = el.getAttribute("data-key");
 
+      console.log(dragStartKey);
       let crt = el.cloneNode(true);
 
       crt.setAttribute("id", "crt");
@@ -115,6 +118,7 @@ const Links = () => {
       }
 
       if (el.classList.contains("directory")) {
+        el.classList.remove(`outline-${theme}-800`);
         el.classList.remove("bg-sky-300");
         el.classList.remove("border-sky-900");
       }
@@ -133,6 +137,8 @@ const Links = () => {
         el.classList.contains("directory") &&
         el.getAttribute("data-key") !== directory
       ) {
+        console.log("over");
+        el.classList.add(`outline-${theme}-800`);
         el.classList.add("bg-sky-300");
         el.classList.add("border-sky-900");
       }
@@ -150,6 +156,7 @@ const Links = () => {
         el.classList.replace("border-sky-900", "border-sky-500");
       }
       if (el.classList.contains("directory")) {
+        el.classList.remove(`outline-${theme}-800`);
         el.classList.remove("bg-sky-300");
         el.classList.remove("border-sky-900");
       }
@@ -288,7 +295,7 @@ const Links = () => {
           <span key={index}>
             {index !== 0 && <i>{"  >  "}</i>}
             <button
-              className="directory hover:bg-zinc-200 py-2 px-3 rounded-full"
+              className={`directory outline outline-2 outline-${theme}-500 hover:bg-${theme}-100 bg-${theme}-200 py-2 px-3 rounded-full`}
               data-key={directory
                 .split("/")
                 .slice(0, index + 1)
@@ -311,29 +318,19 @@ const Links = () => {
       </div>
       <div className="grid gap-2 grid-cols-auto-224">
         {links.map((link: any, index) => (
-          <div
+          <Link
+            linksRef={linksRef}
+            directory={directory}
+            setDirectory={setDirectory}
             key={index}
-            data-key={directory + "/" + link.name}
-            ref={(el) => (linksRef.current[index] = el)}
-            onClick={() => {
-              if (link.type === "folder") {
-                setDirectory((prev) => prev + "/" + link.name);
-              }
-            }}
-            draggable={link.type === "url" && loading === false}
-            className={`h-32 w-full justify-between p-1 text-black rounded cursor-pointer ${
-              link.type === "url"
-                ? "bg-zinc-300 "
-                : "folder bg-sky-300 border-2 border-sky-500 transition-transform ease-in-out duration-300"
-            }`}
-          >
-            <Link
-              name={link.name}
-              type={link.type}
-              url={link.url}
-              deleteLink={deleteLink}
-            />
-          </div>
+            dataKey={directory + "/" + link.name}
+            name={link.name}
+            type={link.type}
+            url={link.url}
+            deleteLink={deleteLink}
+            loading={loading}
+            index={index}
+          />
         ))}
       </div>
 
