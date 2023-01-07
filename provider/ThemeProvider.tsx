@@ -1,12 +1,29 @@
-import { createContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
-export const ThemeContext = createContext({
-  theme: "theme-dark",
-  setTheme: (_theme: any) => {},
-});
+export const THEME_CONTEXT_DEFAULT = {
+  theme: "light",
+  setTheme: (_theme: string) => {},
+};
+
+export const ThemeContext = createContext(THEME_CONTEXT_DEFAULT);
+
+export const useThemeContext = () => {
+  const context = useContext(ThemeContext);
+
+  if (!context) {
+    throw new Error("useThemeContext used outside ThemeContext provider");
+  }
+  useEffect(() => {
+    document.body.classList.value =
+      "transition-colors ease-in-out duration-200";
+    document.body.classList.add(`theme-${context.theme}`);
+  }, [context.theme]);
+
+  return context;
+};
+
 const ThemeProvider = ({ children }: any) => {
-  // useState
-  const [theme, setTheme] = useState<any>("theme-dark");
+  const [theme, setTheme] = useState("light");
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

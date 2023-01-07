@@ -8,20 +8,24 @@ body {
 @tailwind utilities;
 
 .theme-light {
-  --accent: 166 200 250;
-  --content: 255 255 255;
-  --background: 38 38 38;
-  --lighter-background: 48 48 48;
-  --foreground: 56 56 56;
-  --lighter-foreground: 66 66 66;
-  --edge: 69 136 247;
+  --background: #f4f4f4; /* background */
+  --background2: #ffffff; /* layer-1 */
+  --content: #161616; /* text */
+  --accent: #0f62fe; /* interactive */
+  --foreground: #e0e0e0; /* layer-accent-1 */
+  --foreground-hover: #cacaca; /* layer-accent-1-hover */
+  --foreground2: #cacaca; /* layer-accent-1-hover */
+  --foreground2-hover: #a8a8a8; /* layer-accent-1-hover */
+  --edge: #0f62fe; /* interactive */
 }
 .theme-dark {
-  --accent: 166 200 250;
-  --content: 255 255 255;
-  --background: 38 38 38;
-  --lighter-background: 48 48 48;
-  --foreground: 56 56 56;
-  --lighter-foreground: 66 66 66;
-  --edge: 69 136 247;
+  --background: #262626; /* background */
+  --background2: #393939; /* layer-1 */
+  --content: #f4f4f4; /* text */
+  --accent: #4589ff; /* interactive */
+  --foreground: #525252; /* layer-accent-1 */
+  --foregroud-hover: #656565; /* layer-accent-1-hover */
+  --foreground2: #6f6f6f; /* layer-accent-2 */
+  --foreground2-hover: #5e5e5e; /* layer-accent-2-hover */
+  --edge: #4589ff; /* interactive */
 }

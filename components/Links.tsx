@@ -89,7 +89,7 @@ const Links = () => {
       crt.classList.add(
         "w-44",
         "h-fit",
-        "bg-lighterForeground",
+        "bg-foreground2",
         "border-edge",
         "border-2",
         "absolute",
@@ -111,11 +111,11 @@ const Links = () => {
       const el = e.currentTarget;
 
       if (el.classList.contains("folder")) {
-        el.classList.remove("scale-105");
+        el.classList.replace("border-edge", "border-foreground2");
       }
 
       if (el.classList.contains("directory")) {
-        el.classList.remove("bg-lighterForeground");
+        el.classList.replace("border-edge", "border-transparent");
         // effect removed
       }
     };
@@ -125,13 +125,13 @@ const Links = () => {
       const el = e.currentTarget;
 
       if (el.classList.contains("folder")) {
-        el.classList.add("scale-105");
+        el.classList.replace("border-foreground2", "border-edge");
       }
       if (
         el.classList.contains("directory") &&
         el.getAttribute("data-key") !== directory
       ) {
-        el.classList.add("bg-lighterForeground");
+        el.classList.replace("border-transparent", "border-edge");
         // effect removed
       }
     };
@@ -143,10 +143,10 @@ const Links = () => {
       const dropKey = e.currentTarget.getAttribute("data-key");
 
       if (el.classList.contains("folder")) {
-        el.classList.remove("scale-105");
+        el.classList.replace("border-edge", "border-foreground2");
       }
       if (el.classList.contains("directory")) {
-        el.classList.remove("bg-lighterForeground");
+        el.classList.replace("border-edge", "border-transparent");
         // effect removed
       }
 
@@ -284,7 +284,10 @@ const Links = () => {
           <span key={index}>
             {index !== 0 && <i className="text-content">{"  >  "}</i>}
             <button
-              className="directory hover:bg-lighterForeground py-2 px-3 rounded-full bg-foreground text-content"
+              className={`directory ${
+                index !== directory.split("/").length - 1 &&
+                "hover:bg-foreground2Hover"
+              } py-2 px-3 rounded-full bg-foreground2 text-content border-2 border-transparent`}
               data-key={directory
                 .split("/")
                 .slice(0, index + 1)
@@ -299,6 +302,7 @@ const Links = () => {
                     .join("/")
                 )
               }
+              disabled={index === directory.split("/").length - 1}
             >
               {dir}
             </button>
@@ -324,7 +328,7 @@ const Links = () => {
       </div>
 
       <p>%LocalAppData%\Google\Chrome\User Data\Default\Bookmarks</p>
-      <p>~/Library/Application\ Support/Google/Chrome/Default/Bookmarks</p>
+      <p>~/Library/Application Support/Google/Chrome/Default/Bookmarks</p>
       <input type="file" onChange={fileOnChange} />
     </div>
   );

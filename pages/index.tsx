@@ -6,12 +6,14 @@ import Router from "next/router";
 import AddLinkForm from "../components/AddLinkForm";
 import { User } from "firebase/auth";
 import Links from "../components/Links";
+import { ThemeContext } from "../provider/ThemeProvider";
 
 export default function Home() {
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
 
   // useContext
   const { user, setUser } = useContext(UserContext);
+  const { theme } = useContext(ThemeContext);
 
   // useEffect
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function Home() {
   if (!user) return <></>;
 
   return (
-    <div>
+    <div className={theme}>
       <Head>
         <title>Desktop</title>
         <meta name="description" content="" />
@@ -37,13 +39,7 @@ export default function Home() {
       </Head>
       <main className="text-cotent">
         <Header />
-        <div className="p-2 gap-2 flex flex-col bg-background">
-          <button
-            onClick={() => setShowAddLinkForm(true)}
-            className="w-36 bg-foreground text-content p-2 rounded-md hover:text-accent"
-          >
-            Add Link
-          </button>
+        <div className="p-2 gap-2 flex flex-col">
           {showAddLinkForm && (
             <AddLinkForm setShowAddLinkForm={setShowAddLinkForm} />
           )}

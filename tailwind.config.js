@@ -7,13 +7,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        accent: "rgb(var(--accent) / <alpha-value>)",
-        content: "rgb(var(--content) / <alpha-value>)",
-        foreground: "rgb(var(--foreground) / <alpha-value>)",
-        lighterForeground: "rgb(var(--lighter-foreground) / <alpha-value>)",
-        background: "rgb(var(--background) / <alpha-value>)",
-        lighterBackground: "rgb(var(--lighter-background) / <alpha-value>)",
-        edge: "rgb(var(--edge) / <alpha-value>)",
+        accent: "var(--accent)",
+        content: "var(--content)",
+        foreground: "var(--foreground)",
+        foregroundHover: "var(--foreground-hover)",
+        foreground2: "var(--foreground2)",
+        foreground2Hover: "var(--foreground2-hover)",
+        background: "var(--background)",
+        background2: "var(--background2)",
+        edge: "var(--edge)",
       },
     },
     gridTemplateColumns: {

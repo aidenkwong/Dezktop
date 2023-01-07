@@ -60,8 +60,10 @@ const Link = ({
           return false;
         }}
         rel="noreferrer"
-        className={`hover:bg-lighterForeground bg-foreground h-32 w-full justify-between p-2 text-content rounded cursor-pointer transition-transform ease-in-out duration-100 ${
-          type === "url" ? "" : "folder border-2 border-edge"
+        className={` h-32 w-full justify-between p-2 text-content rounded cursor-pointer transition-all ease-in-out duration-300 ${
+          type === "url"
+            ? "bg-foreground2 hover:bg-foreground2Hover"
+            : "folder bg-foreground border-2 border-foreground2"
         }`}
       >
         {name}
@@ -69,7 +71,7 @@ const Link = ({
       {showMenu && ( // Menu when left click
         <div
           ref={menuRef}
-          className="absolute bg-zinc-300 p-2 text-center rounded shadow-lg"
+          className="absolute bg-buttonSecondary hover:bg-buttonSecondaryHover p-2 text-center rounded shadow-lg"
           style={{
             left: menuPosition.x + window.scrollX,
             top: menuPosition.y + window.scrollY,

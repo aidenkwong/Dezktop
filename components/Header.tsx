@@ -4,12 +4,15 @@ import { useContext } from "react";
 import { firebaseApp } from "../firebase/firebase";
 import Image from "next/image";
 import { UserContext } from "../provider/UserProvider";
+import { useThemeContext } from "../provider/ThemeProvider";
+import { LightFilled } from "@carbon/icons-react";
 
 const auth = getAuth(firebaseApp);
 
 const Header = () => {
   // useContext
   const { user, setUser } = useContext(UserContext);
+  const { theme, setTheme } = useThemeContext();
 
   // functions
   const signOut = async () => {
@@ -19,9 +22,18 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-foreground text-content h-12 justify-between flex content-center px-2">
+    <div className="bg-background2 text-content h-12 justify-between flex content-center px-2">
       <p className="text-2xl content-center grid">Desktop</p>
-      <div className="flex gap-4 align-middle">
+      <div className="flex gap-4 align-middle ">
+        <div className="content-center grid">
+          <LightFilled
+            size={24}
+            className="cursor-pointer"
+            onClick={() => {
+              setTheme(theme === "light" ? "dark" : "light");
+            }}
+          />
+        </div>
         <div className="content-center grid">
           <p>{user?.displayName}</p>
         </div>
@@ -38,7 +50,7 @@ const Header = () => {
         </div>
 
         <button
-          className="content-center grid hover:text-accent"
+          className="content-center grid hover:text-accent "
           onClick={signOut}
         >
           sign out
