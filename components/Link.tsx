@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
-const Link = ({ name, url, deleteLink }: any) => {
+const Link = ({
+  name,
+  url,
+  type,
+  deleteLink,
+  directory,
+  setDirectory,
+  linksRef,
+  loading,
+  index,
+}: any) => {
   // useState
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -30,6 +40,14 @@ const Link = ({ name, url, deleteLink }: any) => {
   return (
     <>
       <a
+        data-key={directory + "/" + name}
+        ref={(el) => (linksRef.current[index] = el)}
+        onClick={() => {
+          if (type === "folder") {
+            setDirectory((prev: string) => prev + "/" + name);
+          }
+        }}
+        draggable={type === "url" && loading === false}
         target="_blank"
         href={url}
         key={name}
@@ -42,9 +60,11 @@ const Link = ({ name, url, deleteLink }: any) => {
           return false;
         }}
         rel="noreferrer"
-        // draggable={false}
+        className={`hover:bg-lighterForeground bg-foreground h-32 w-full justify-between p-2 text-content rounded cursor-pointer transition-transform ease-in-out duration-100 ${
+          type === "url" ? "" : "folder border-2 border-edge"
+        }`}
       >
-        <div>{name}</div>
+        {name}
       </a>
       {showMenu && ( // Menu when left click
         <div

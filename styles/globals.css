@@ -1,3 +1,27 @@
+body {
+  @apply bg-background;
+  @apply text-content;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.theme-light {
+  --accent: 166 200 250;
+  --content: 255 255 255;
+  --background: 38 38 38;
+  --lighter-background: 48 48 48;
+  --foreground: 56 56 56;
+  --lighter-foreground: 66 66 66;
+  --edge: 69 136 247;
+}
+.theme-dark {
+  --accent: 166 200 250;
+  --content: 255 255 255;
+  --background: 38 38 38;
+  --lighter-background: 48 48 48;
+  --foreground: 56 56 56;
+  --lighter-foreground: 66 66 66;
+  --edge: 69 136 247;
+}

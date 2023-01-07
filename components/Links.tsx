@@ -85,15 +85,17 @@ const Links = () => {
       let crt = el.cloneNode(true);
 
       crt.setAttribute("id", "crt");
-
-      crt.classList.replace("w-full", "w-44");
-      crt.classList.replace("h-32", "h-fit");
+      crt.classList = "";
       crt.classList.add(
-        "border-sky-500",
+        "w-44",
+        "h-fit",
+        "bg-lighterForeground",
+        "border-edge",
         "border-2",
         "absolute",
         "-top-64",
-        "-left-64"
+        "-left-64",
+        "rounded"
       );
 
       document.body.appendChild(crt);
@@ -110,13 +112,11 @@ const Links = () => {
 
       if (el.classList.contains("folder")) {
         el.classList.remove("scale-105");
-        el.classList.replace("bg-sky-400", "bg-sky-300");
-        el.classList.replace("border-sky-900", "border-sky-500");
       }
 
       if (el.classList.contains("directory")) {
-        el.classList.remove("bg-sky-300");
-        el.classList.remove("border-sky-900");
+        el.classList.remove("bg-lighterForeground");
+        // effect removed
       }
     };
 
@@ -126,15 +126,13 @@ const Links = () => {
 
       if (el.classList.contains("folder")) {
         el.classList.add("scale-105");
-        el.classList.replace("bg-sky-300", "bg-sky-400");
-        el.classList.replace("border-sky-500", "border-sky-900");
       }
       if (
         el.classList.contains("directory") &&
         el.getAttribute("data-key") !== directory
       ) {
-        el.classList.add("bg-sky-300");
-        el.classList.add("border-sky-900");
+        el.classList.add("bg-lighterForeground");
+        // effect removed
       }
     };
 
@@ -146,12 +144,10 @@ const Links = () => {
 
       if (el.classList.contains("folder")) {
         el.classList.remove("scale-105");
-        el.classList.replace("bg-sky-400", "bg-sky-300");
-        el.classList.replace("border-sky-900", "border-sky-500");
       }
       if (el.classList.contains("directory")) {
-        el.classList.remove("bg-sky-300");
-        el.classList.remove("border-sky-900");
+        el.classList.remove("bg-lighterForeground");
+        // effect removed
       }
 
       if (dropKey === directory) return;
@@ -286,9 +282,9 @@ const Links = () => {
       <div className="my-2">
         {directory.split("/").map((dir, index) => (
           <span key={index}>
-            {index !== 0 && <i>{"  >  "}</i>}
+            {index !== 0 && <i className="text-content">{"  >  "}</i>}
             <button
-              className="directory hover:bg-zinc-200 py-2 px-3 rounded-full"
+              className="directory hover:bg-lighterForeground py-2 px-3 rounded-full bg-foreground text-content"
               data-key={directory
                 .split("/")
                 .slice(0, index + 1)
@@ -311,29 +307,19 @@ const Links = () => {
       </div>
       <div className="grid gap-2 grid-cols-auto-224">
         {links.map((link: any, index) => (
-          <div
+          <Link
+            linksRef={linksRef}
+            directory={directory}
+            setDirectory={setDirectory}
             key={index}
-            data-key={directory + "/" + link.name}
-            ref={(el) => (linksRef.current[index] = el)}
-            onClick={() => {
-              if (link.type === "folder") {
-                setDirectory((prev) => prev + "/" + link.name);
-              }
-            }}
-            draggable={link.type === "url" && loading === false}
-            className={`h-32 w-full justify-between p-1 text-black rounded cursor-pointer ${
-              link.type === "url"
-                ? "bg-zinc-300 "
-                : "folder bg-sky-300 border-2 border-sky-500 transition-transform ease-in-out duration-300"
-            }`}
-          >
-            <Link
-              name={link.name}
-              type={link.type}
-              url={link.url}
-              deleteLink={deleteLink}
-            />
-          </div>
+            dataKey={directory + "/" + link.name}
+            name={link.name}
+            type={link.type}
+            url={link.url}
+            deleteLink={deleteLink}
+            loading={loading}
+            index={index}
+          />
         ))}
       </div>
 

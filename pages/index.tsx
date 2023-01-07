@@ -28,19 +28,19 @@ export default function Home() {
   if (!user) return <></>;
 
   return (
-    <>
+    <div>
       <Head>
         <title>Desktop</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
+      <main className="text-cotent">
         <Header />
-        <div className="p-2 gap-2 flex flex-col">
+        <div className="p-2 gap-2 flex flex-col bg-background">
           <button
             onClick={() => setShowAddLinkForm(true)}
-            className="w-36 bg-zinc-900 text-white p-2 rounded-md hover:text-sky-400"
+            className="w-36 bg-foreground text-content p-2 rounded-md hover:text-accent"
           >
             Add Link
           </button>
@@ -50,6 +50,6 @@ export default function Home() {
           <Links />
         </div>
       </main>
-    </>
+    </div>
   );
 }

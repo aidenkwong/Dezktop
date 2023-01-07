@@ -19,7 +19,7 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-zinc-900 text-white h-12 justify-between flex content-center px-2">
+    <div className="bg-foreground text-content h-12 justify-between flex content-center px-2">
       <p className="text-2xl content-center grid">Desktop</p>
       <div className="flex gap-4 align-middle">
         <div className="content-center grid">
@@ -38,7 +38,7 @@ const Header = () => {
         </div>
 
         <button
-          className="content-center grid hover:text-sky-400"
+          className="content-center grid hover:text-accent"
           onClick={signOut}
         >
           sign out
