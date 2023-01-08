@@ -18,8 +18,7 @@ const Links = () => {
   // useContext
   const { user } = useContext(UserContext);
 
-  // functions
-
+  // useEffect
   useEffect(() => {
     if (user?.uid) {
       (async () => {
@@ -78,6 +77,7 @@ const Links = () => {
     setLinks(tmpLinks);
   }, [allLinks, directory]);
 
+  // add event listeners and refs
   useEffect(() => {
     let dragStartKey: string;
 
@@ -89,11 +89,11 @@ const Links = () => {
       const el = e.currentTarget;
 
       dragStartKey = el.getAttribute("data-key");
-
       let crt = el.cloneNode(true);
 
       crt.setAttribute("id", "crt");
       crt.classList = "";
+      // classList for the dragging element
       crt.classList.add(
         "w-44",
         "h-fit",
@@ -105,7 +105,6 @@ const Links = () => {
         "-left-64",
         "rounded"
       );
-
       document.body.appendChild(crt);
       e.dataTransfer.setDragImage(crt, 0, 0);
     };
@@ -146,7 +145,6 @@ const Links = () => {
 
     const handleDrop = (e: any) => {
       e.preventDefault();
-
       const el = e.currentTarget;
       const dropKey = e.currentTarget.getAttribute("data-key");
 
@@ -168,47 +166,51 @@ const Links = () => {
 
       let tmpAllLinks = allLinks;
 
-      const dfsDelete = (arr: any[], dir: string) => {
-        const curDirArr = dir.split("/");
+      const dfs = (
+        arr: any[],
+        startKey: string,
+        dropKey: string,
+        depth: number
+      ) => {
+        const startKeyArr = startKey.split("/");
+        const dropKeyArr = dropKey.split("/");
 
-        if (curDirArr.length === 2) {
-          arr.find((link) => link.name === curDirArr[0]).children = arr
-            .find((link) => link.name === curDirArr[0])
-            .children.filter((link: any) => link.name !== curDirArr[1]);
+        let curDirArr: string[] = [];
 
-          return;
+        if (startKeyArr.length > dropKeyArr.length) {
+          curDirArr = startKeyArr.slice(0, depth + 1);
+        } else {
+          curDirArr = dropKeyArr.slice(0, depth + 1);
+        }
+
+        if (curDirArr.join("/") === dropKeyArr.join("/")) {
+          arr.push(movedLink);
+        }
+
+        if (startKeyArr.length - curDirArr.length === 1) {
+          const idx = arr.findIndex((v) => {
+            return v.name === startKeyArr[startKeyArr.length - 1];
+          });
+
+          arr.splice(idx, 1);
+        }
+        depth++;
+        if (startKeyArr.length > dropKeyArr.length) {
+          curDirArr = startKeyArr.slice(0, depth + 1);
+        } else {
+          curDirArr = dropKeyArr.slice(0, depth + 1);
         }
         for (let i = 0; i < arr.length; i++) {
-          if (arr[i].name === curDirArr[0]) {
-            dfsDelete(arr[i].children, curDirArr.slice(1).join("/"));
+          if (
+            arr[i].name === curDirArr[curDirArr.length - 1] &&
+            arr[i].children
+          ) {
+            dfs(arr[i].children, startKey, dropKey, depth);
           }
         }
       };
 
-      dfsDelete(tmpAllLinks, dragStartKey);
-
-      const dfsAppend = (arr: any[], dir: string) => {
-        // My Bookmarks, foo, bar
-        const curDirArr = dir.split("/");
-
-        if (curDirArr.length === 1) {
-          for (let i = 0; i < arr.length; i++) {
-            if (arr[i].name === curDirArr[0]) {
-              arr[i].children.push(movedLink);
-            }
-          }
-        }
-
-        for (let i = 0; i < arr.length; i++) {
-          if (arr[i].name === curDirArr[0]) {
-            dfsAppend(arr[i].children, curDirArr.slice(1).join("/"));
-          }
-        }
-
-        return arr;
-      };
-
-      dfsAppend(tmpAllLinks, dropKey);
+      dfs(tmpAllLinks[0].children, dragStartKey, dropKey, 0);
 
       setAllLinks([...tmpAllLinks]);
     };
@@ -340,18 +342,18 @@ const Links = () => {
           To import your bookmarks from chrome, upload the file in the following
           path of your computer:
         </p>
-        <p className="flex gap-2">
+        <div className="flex gap-2">
           Windows:{" "}
           <p className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
             %LocalAppData%\Google\Chrome\User Data\Default\Bookmarks
           </p>
-        </p>
-        <p className="flex gap-2">
+        </div>
+        <div className="flex gap-2">
           Mac:{" "}
           <p className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
             ~/Library/Application Support/Google/Chrome/Default/Bookmarks
           </p>
-        </p>
+        </div>
         <input type="file" onChange={fileOnChange} />
       </div>
     </div>
