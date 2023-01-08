@@ -17,6 +17,8 @@ body {
   --foreground2: #cacaca; /* layer-accent-1-hover */
   --foreground2-hover: #a8a8a8; /* layer-accent-1-hover */
   --edge: #0f62fe; /* interactive */
+  --button: #0f62fe; /* interactive */
+  --button-hover: #0353e9; /* interactive-hover */
 }
 .theme-dark {
   --background: #262626; /* background */
@@ -28,4 +30,6 @@ body {
   --foreground2: #6f6f6f; /* layer-accent-2 */
   --foreground2-hover: #5e5e5e; /* layer-accent-2-hover */
   --edge: #4589ff; /* interactive */
+  --button: #0f62fe; /* interactive */
+  --button-hover: #0353e9; /* interactive-hover */
 }

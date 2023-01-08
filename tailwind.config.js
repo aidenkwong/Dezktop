@@ -16,6 +16,8 @@ module.exports = {
         background: "var(--background)",
         background2: "var(--background2)",
         edge: "var(--edge)",
+        button: "var(--button)",
+        buttonHover: "var(--button-hover)",
       },
     },
     gridTemplateColumns: {

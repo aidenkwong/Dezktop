@@ -10,6 +10,7 @@ export default function Document() {
       <Head />
       <body className={theme}>
         <Main />
+        <div id="portal"></div>
         <NextScript />
       </body>
     </Html>

@@ -3,22 +3,23 @@ import Header from "../components/Header";
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../provider/UserProvider";
 import Router from "next/router";
-import AddLinkForm from "../components/AddLinkForm";
 import { User } from "firebase/auth";
 import Links from "../components/Links";
 import { ThemeContext } from "../provider/ThemeProvider";
 
 export default function Home() {
-  const [showAddLinkForm, setShowAddLinkForm] = useState(false);
-
   // useContext
   const { user, setUser } = useContext(UserContext);
-  const { theme } = useContext(ThemeContext);
+  const { theme, setTheme } = useContext(ThemeContext);
 
   // useEffect
   useEffect(() => {
     const localStorageUser = localStorage.getItem("user");
+    const localStorageTheme = localStorage.getItem("theme");
 
+    if (localStorageTheme) {
+      setTheme(localStorageTheme);
+    }
     if (!localStorageUser) {
       Router.push("/auth");
     } else {
@@ -40,9 +41,6 @@ export default function Home() {
       <main className="text-cotent">
         <Header />
         <div className="p-2 gap-2 flex flex-col">
-          {showAddLinkForm && (
-            <AddLinkForm setShowAddLinkForm={setShowAddLinkForm} />
-          )}
           <Links />
         </div>
       </main>

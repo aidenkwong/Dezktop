@@ -1,7 +1,9 @@
 import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useContext, useEffect, useRef, useState } from "react";
+import { MdAddCircleOutline, MdBookmarkAdd } from "react-icons/md";
 import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
+import AddLinkForm from "./AddLinkForm";
 import Link from "./Link";
 
 const Links = () => {
@@ -10,6 +12,7 @@ const Links = () => {
   const [allLinks, setAllLinks] = useState<Array<any>>([]);
   const [links, setLinks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
+  const [showAddLinkForm, setShowAddLinkForm] = useState(false);
 
   // useRef
   const linksRef = useRef<Array<HTMLDivElement | null>>([]);
@@ -42,7 +45,6 @@ const Links = () => {
 
   useEffect(() => {
     setLoading(true);
-
     if (allLinks.length > 0 && user?.uid) {
       (async () => {
         try {
@@ -290,51 +292,82 @@ const Links = () => {
   return (
     <div>
       <div className="my-2">
-        {directory.split("/").map((dir, index) => (
-          <span key={index}>
-            {index !== 0 && <i className="text-content">{"  >  "}</i>}
-            <button
-              className={`directory ${
-                index !== directory.split("/").length - 1 &&
-                "hover:bg-foreground2Hover"
-              } py-2 px-3 rounded-full bg-foreground2 text-content border-2 border-transparent leading-3`}
-              data-key={directory
-                .split("/")
-                .slice(0, index + 1)
-                .join("/")}
-              ref={(el) => (directoryRef.current[index] = el)}
-              key={index}
-              onClick={() =>
-                setDirectory(
-                  directory
-                    .split("/")
-                    .slice(0, index + 1)
-                    .join("/")
-                )
-              }
-              disabled={index === directory.split("/").length - 1}
-            >
-              {dir}
+        <div className="grid gap-2 grid-cols-auto-224">
+          <div className="col-span-full flex justify-between">
+            <div>
+              {directory.split("/").map((dir, index) => (
+                <span key={index}>
+                  {index !== 0 && <i className="text-content">{"  >  "}</i>}
+                  <button
+                    className={`directory ${
+                      index !== directory.split("/").length - 1 &&
+                      "hover:bg-foreground2Hover"
+                    }  px-3 rounded-full bg-foreground2 text-content border-2 border-transparent`}
+                    data-key={directory
+                      .split("/")
+                      .slice(0, index + 1)
+                      .join("/")}
+                    ref={(el) => (directoryRef.current[index] = el)}
+                    key={index}
+                    onClick={() =>
+                      setDirectory(
+                        directory
+                          .split("/")
+                          .slice(0, index + 1)
+                          .join("/")
+                      )
+                    }
+                    disabled={index === directory.split("/").length - 1}
+                  >
+                    {dir}
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <button className="flex gap-1 bg-button hover:bg-buttonHover align-middle rounded px-2 text-white">
+              <div className="content-center grid h-8 text-sm">
+                Add Bookmark
+              </div>
+              <AddLinkForm
+                setShowAddLinkForm={setShowAddLinkForm}
+                showAddLinkForm={showAddLinkForm}
+                setLinks={setLinks}
+                links={links}
+                allLinks={allLinks}
+                setAllLinks={setAllLinks}
+                directory={directory}
+              />
+              <div className="content-center grid h-8">
+                <MdBookmarkAdd size={24} />
+              </div>
             </button>
-          </span>
-        ))}
-      </div>
-      <div className="grid gap-2 grid-cols-auto-224">
-        {links.map((link: any, index) => (
-          <Link
-            linksRef={linksRef}
-            directory={directory}
-            setDirectory={setDirectory}
-            key={index}
-            dataKey={directory + "/" + link.name}
-            name={link.name}
-            type={link.type}
-            url={link.url}
-            deleteLink={deleteLink}
-            loading={loading}
-            index={index}
-          />
-        ))}
+          </div>
+          {links.map((link: any, index) => (
+            <Link
+              linksRef={linksRef}
+              directory={directory}
+              setDirectory={setDirectory}
+              key={index}
+              dataKey={directory + "/" + link.name}
+              name={link.name}
+              type={link.type}
+              url={link.url}
+              deleteLink={deleteLink}
+              loading={loading}
+              index={index}
+            />
+          ))}
+          <div
+            onClick={() => {
+              setShowAddLinkForm(true);
+            }}
+            className="h-32 gap-1 w-full bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
+          >
+            Add Shortcut
+            <MdAddCircleOutline size={24} />
+          </div>
+        </div>
       </div>
 
       <div className="bg-foreground my-2 p-2 w-fit rounded">
