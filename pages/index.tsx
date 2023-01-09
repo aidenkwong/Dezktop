@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Header from "../components/Header";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { UserContext } from "../provider/UserProvider";
 import Router from "next/router";
 import { User } from "firebase/auth";
@@ -40,7 +40,7 @@ export default function Home() {
       </Head>
       <main className="text-cotent">
         <Header />
-        <div className="p-2 gap-2 flex flex-col">
+        <div className="p-2 gap-2 flex flex-col pt-12">
           <Links />
         </div>
       </main>

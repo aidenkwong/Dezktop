@@ -1,6 +1,6 @@
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useContext, useEffect, useRef, useState } from "react";
-import { MdAddCircleOutline, MdBookmarkAdd } from "react-icons/md";
+import { MdAddCircleOutline } from "react-icons/md";
 import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
 import AddLinkForm from "./AddLinkForm";
@@ -25,22 +25,25 @@ const Links = () => {
   useEffect(() => {
     if (user?.uid) {
       (async () => {
-        const docRef = doc(firebaseDB, "users", user?.uid!!);
-        const docSnap = await getDoc(docRef);
-        const data = docSnap.data();
+        try {
+          const docRef = doc(firebaseDB, "users", user?.uid!!);
+          const docSnap = await getDoc(docRef);
+          const data = docSnap.data();
 
-        if (data) {
-          setAllLinks([
-            {
-              name: "My Bookmarks",
-              type: "folder",
-              children: data.bookmarks,
-            },
-          ]);
+          if (data) {
+            setAllLinks([
+              {
+                name: "My Bookmarks",
+                type: "folder",
+                children: data.bookmarks,
+              },
+            ]);
+          }
+        } catch (error) {
+          console.error(error);
         }
       })();
     }
-    return;
   }, [user]);
 
   useEffect(() => {
@@ -57,36 +60,37 @@ const Links = () => {
               bookmarks: allLinks[0].children,
             });
           }
+          console.error(error);
         }
       })();
     }
-
     setLoading(false);
   }, [allLinks, user?.uid]);
 
   useEffect(() => {
-    let tmpLinks = allLinks;
-    const directoryArr = directory.split("/");
+    setLinks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type)));
+  }, [links]);
 
-    for (let i = 0; i < directoryArr.length; i++) {
-      const idx = tmpLinks.findIndex(
-        (link) => link.name === directoryArr[i] && link.type === "folder"
-      );
+  // useEffect(() => {
+  //   let tmpLinks = allLinks;
+  //   const directoryArr = directory.split("/");
 
-      if (idx === -1) return;
-      tmpLinks = tmpLinks[idx].children;
-    }
-    setLinks(tmpLinks);
-  }, [allLinks, directory]);
+  //   for (let i = 0; i < directoryArr.length; i++) {
+  //     const idx = tmpLinks.findIndex(
+  //       (link) => link.name === directoryArr[i] && link.type === "folder"
+  //     );
+
+  //     if (idx === -1) return;
+  //     tmpLinks = tmpLinks[idx].children;
+  //   }
+  //   setLinks(tmpLinks);
+  // }, [allLinks, directory]);
 
   // add event listeners and refs
   useEffect(() => {
     let dragStartKey: string;
 
-    links.sort((a, b) => {
-      return a.type.localeCompare(b.type);
-    });
-
+    // Start of event listener functions for DND API
     const handleDragStart = (e: any) => {
       const el = e.currentTarget;
 
@@ -186,7 +190,26 @@ const Links = () => {
         }
 
         if (curDirArr.join("/") === dropKeyArr.join("/")) {
+          let duplicateCount = 0;
+
+          for (const link of arr) {
+            const duplicate = link.name === movedLink.name;
+            const duplicateWithNumber = link.name
+              .match(/\((\d+)\)/)
+              ?.input.slice(0, -3);
+
+            if (duplicate || duplicateWithNumber) {
+              duplicateCount++;
+            }
+          }
+          movedLink.name =
+            movedLink.name + `${duplicateCount > 0 && `(${duplicateCount})`}}`;
+
           arr.push(movedLink);
+          arr.sort((a, b) => {
+            return a.type.localeCompare(b.type);
+          });
+          setLinks(arr);
         }
 
         if (startKeyArr.length - curDirArr.length === 1) {
@@ -195,6 +218,9 @@ const Links = () => {
           });
 
           arr.splice(idx, 1);
+          arr.sort((a, b) => {
+            return a.type.localeCompare(b.type);
+          });
         }
         depth++;
         if (startKeyArr.length > dropKeyArr.length) {
@@ -216,8 +242,29 @@ const Links = () => {
 
       setAllLinks([...tmpAllLinks]);
     };
+    // End of event listener functions for DND API
 
+    // Set the links in current directory
+    let tmpLinks = [...allLinks];
+    const directoryArr = directory.split("/");
+
+    for (let i = 0; i < directoryArr.length; i++) {
+      const idx = tmpLinks.findIndex(
+        (link) => link.name === directoryArr[i] && link.type === "folder"
+      );
+
+      if (idx === -1) return;
+      tmpLinks = tmpLinks[idx].children;
+    }
+    tmpLinks.sort((a, b) => {
+      return a.type.localeCompare(b.type);
+    });
+    setLinks(tmpLinks);
+
+    // Populate the refs to links
     linksRef.current = linksRef?.current?.slice(0, links.length);
+
+    // Add event listeners to link nodes
     for (let i = 0; i < links.length; i++) {
       if (links[i].type === "url") {
         linksRef.current[i]?.addEventListener("dragstart", handleDragStart);
@@ -231,13 +278,17 @@ const Links = () => {
       linksRef.current[i]?.addEventListener("dragover", handleDragOver);
     }
 
+    // Populate the refs to directories
     directoryRef.current = directoryRef?.current?.slice(0, directory.length);
+
+    // Add event listeners to directory nodes
     for (let i = 0; i < directory.length; i++) {
       directoryRef.current[i]?.addEventListener("dragover", handleDragOver);
       directoryRef.current[i]?.addEventListener("dragleave", handleDragLeave);
       directoryRef.current[i]?.addEventListener("drop", handleDrop);
     }
 
+    // Remove event listeners when unmounting
     return () => {
       for (let i = 0; i < links.length; i++) {
         if (links[i].type === "url") {
@@ -272,10 +323,40 @@ const Links = () => {
   }, [allLinks, directory, links]);
 
   // functions
-  const deleteLink = async (name: string) => {
-    await deleteDoc(doc(firebaseDB, "users", user?.uid!!, "links", name));
+  const deleteLink = async (key: string) => {
+    let tmpAllLinks = [...allLinks];
+    const dfs = (arr: any[], key: string, depth: number) => {
+      const keyArr = key.split("/");
+      let curDirArr: string[] = [];
+
+      curDirArr = keyArr.slice(0, depth + 1);
+
+      if (keyArr.length - curDirArr.length === 1) {
+        const idx = arr.findIndex((v) => {
+          return v.name === keyArr[keyArr.length - 1];
+        });
+
+        arr.splice(idx, 1);
+      }
+
+      depth++;
+      curDirArr = keyArr.slice(0, depth + 1);
+      for (let i = 0; i < arr.length; i++) {
+        if (
+          arr[i].name === curDirArr[curDirArr.length - 1] &&
+          arr[i].children
+        ) {
+          dfs(arr[i].children, key, depth);
+        }
+      }
+    };
+
+    dfs(tmpAllLinks[0].children, key, 0);
+
+    setAllLinks(tmpAllLinks);
   };
 
+  // Emit when user upload "Bookmarks" file
   const fileOnChange = async (e: any) => {
     const file = e.target.files[0];
     const fileJson = JSON.parse(await file.text());
@@ -324,24 +405,6 @@ const Links = () => {
                 </span>
               ))}
             </div>
-
-            <button className="flex gap-1 bg-button hover:bg-buttonHover align-middle rounded px-2 text-white">
-              <div className="content-center grid h-8 text-sm">
-                Add Bookmark
-              </div>
-              <AddLinkForm
-                setShowAddLinkForm={setShowAddLinkForm}
-                showAddLinkForm={showAddLinkForm}
-                setLinks={setLinks}
-                links={links}
-                allLinks={allLinks}
-                setAllLinks={setAllLinks}
-                directory={directory}
-              />
-              <div className="content-center grid h-8">
-                <MdBookmarkAdd size={24} />
-              </div>
-            </button>
           </div>
           {links.map((link: any, index) => (
             <Link
@@ -356,6 +419,7 @@ const Links = () => {
               deleteLink={deleteLink}
               loading={loading}
               index={index}
+              setLinks={setLinks}
             />
           ))}
           <div
@@ -364,9 +428,17 @@ const Links = () => {
             }}
             className="h-32 gap-1 w-full bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
           >
-            Add Shortcut
+            Add shortcut or folder
             <MdAddCircleOutline size={24} />
           </div>
+          <AddLinkForm
+            setShowAddLinkForm={setShowAddLinkForm}
+            showAddLinkForm={showAddLinkForm}
+            links={links}
+            allLinks={allLinks}
+            setAllLinks={setAllLinks}
+            directory={directory}
+          />
         </div>
       </div>
 

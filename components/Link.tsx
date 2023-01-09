@@ -6,16 +6,20 @@ const Link = ({
   name,
   url,
   type,
-  deleteLink,
   directory,
   setDirectory,
   linksRef,
   loading,
   index,
+  deleteLink,
 }: any) => {
   // useState
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [windowPosition, setWindowPosition] = useState({ x: 0, y: 0 });
+  const [src, setSrc] = useState(
+    "https://s2.googleusercontent.com/s2/favicons?domain=" + url
+  );
 
   // useRef
   const menuRef = useRef(null);
@@ -58,6 +62,7 @@ const Link = ({
           e.preventDefault();
           setShowMenu(true);
           setMenuPosition({ x: e.clientX, y: e.clientY });
+          setWindowPosition({ x: window.scrollX, y: window.scrollY });
 
           return false;
         }}
@@ -70,19 +75,19 @@ const Link = ({
       >
         <div className="flex">
           {type === "folder" ? (
-            <i>
-              <MdFolderOpen size={24} />
-            </i>
+            <div className="mt-1 w-4 h-4 mr-2">
+              <MdFolderOpen size={16} />
+            </div>
           ) : (
             <div className="mt-1 w-4 h-4 mr-2">
               <Image
                 alt={`favicon of ${url}`}
-                src={
-                  "https://s2.googleusercontent.com/s2/favicons?domain=" + url
-                }
+                src={src}
                 width={16}
                 height={16}
-                className=""
+                onError={() => {
+                  setSrc("/assets/favicon-error.svg");
+                }}
               />
             </div>
           )}
@@ -92,14 +97,21 @@ const Link = ({
       {showMenu && ( // Menu when left click
         <div
           ref={menuRef}
-          className="absolute bg-buttonSecondary hover:bg-buttonSecondaryHover p-2 text-center rounded shadow-lg"
+          className="absolute bg-background2 p-2 text-center rounded drop-shadow-lg"
           style={{
-            left: menuPosition.x + window.scrollX,
-            top: menuPosition.y + window.scrollY,
+            left: menuPosition.x + windowPosition.x,
+            top: menuPosition.y + windowPosition.y,
             display: "block",
           }}
         >
-          <button onClick={() => deleteLink(name)}>Delete Link</button>
+          <button
+            onClick={() => {
+              deleteLink(directory + "/" + name);
+              setShowMenu(false);
+            }}
+          >
+            Delete Link
+          </button>
         </div>
       )}
     </>

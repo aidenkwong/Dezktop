@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
 export const THEME_CONTEXT_DEFAULT = {
-  theme: "light",
+  theme: "dark",
   setTheme: (_theme: string) => {},
 };
 
@@ -25,7 +25,7 @@ export const useThemeContext = () => {
 };
 
 const ThemeProvider = ({ children }: any) => {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
     localStorage.getItem("theme") && setTheme(localStorage.getItem("theme")!!);

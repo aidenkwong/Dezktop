@@ -22,7 +22,7 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-background2 text-content h-12 justify-between flex content-center px-2">
+    <div className="bg-background2 text-content h-12 justify-between flex content-center px-2 top-0 fixed w-full">
       <p className="text-2xl content-center grid">Desktop</p>
       <div className="flex gap-4 align-middle ">
         <div className="content-center grid">
