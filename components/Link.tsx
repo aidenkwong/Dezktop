@@ -1,6 +1,6 @@
 import { MdFolderOpen } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+// import Image from "next/image";
 
 const Link = ({
   name,
@@ -18,8 +18,9 @@ const Link = ({
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [windowPosition, setWindowPosition] = useState({ x: 0, y: 0 });
   const [src, setSrc] = useState(
-    "https://s2.googleusercontent.com/s2/favicons?domain=" + url
+    "https://" + url?.split("/")[2] + "/favicon.ico"
   );
+  // "https://s2.googleusercontent.com/s2/favicons?domain=" + url
 
   // useRef
   const menuRef = useRef(null);
@@ -80,15 +81,22 @@ const Link = ({
             </div>
           ) : (
             <div className="mt-1 w-4 h-4 mr-2">
-              <Image
-                alt={`favicon of ${url}`}
-                src={src}
-                width={16}
-                height={16}
-                onError={() => {
-                  setSrc("/assets/favicon-error.svg");
-                }}
-              />
+              {
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt={`favicon of ${url}`}
+                  src={src}
+                  width={16}
+                  height={16}
+                  onError={() => {
+                    // setSrc("/assets/favicon-error.svg");
+                    setSrc(
+                      "https://s2.googleusercontent.com/s2/favicons?domain=" +
+                        url
+                    );
+                  }}
+                ></img>
+              }
             </div>
           )}
           <div className="w-fit"> {name}</div>

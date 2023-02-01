@@ -455,9 +455,16 @@ const Links = () => {
         </div>
         <div className="flex gap-2">
           Mac:{" "}
-          <p className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
-            ~/Library/Application Support/Google/Chrome/Default/Bookmarks
-          </p>
+          <div>
+            <ol>
+              <li>1. Click Choose File</li>
+              <li>2. Press shift + cmd + g</li>
+              <li>3. Enter the following path and press enter:</li>
+              <li className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
+                ~/Library/Application Support/Google/Chrome/Default/Bookmarks
+              </li>
+            </ol>
+          </div>
         </div>
         <input type="file" onChange={fileOnChange} />
       </div>
