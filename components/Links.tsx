@@ -30,7 +30,7 @@ const Links = () => {
     if (user?.uid) {
       (async () => {
         try {
-          const docRef = doc(firebaseDB, "users", user?.uid!!);
+          const docRef = doc(firebaseDB, "link", user?.uid!!);
           const docSnap = await getDoc(docRef);
           const data = docSnap.data();
 
@@ -56,12 +56,12 @@ const Links = () => {
       (async () => {
         localStorage.setItem("links", JSON.stringify(allLinks));
         try {
-          await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
+          await updateDoc(doc(firebaseDB, "link", user?.uid!!), {
             bookmarks: allLinks[0].children,
           });
         } catch (error: any) {
           if (error.code === "not-found") {
-            await setDoc(doc(firebaseDB, "users", user?.uid!!), {
+            await setDoc(doc(firebaseDB, "link", user?.uid!!), {
               bookmarks: allLinks[0].children,
             });
           }
