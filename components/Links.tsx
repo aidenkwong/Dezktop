@@ -9,7 +9,11 @@ import Link from "./Link";
 const Links = () => {
   // useState
   const [loading, setLoading] = useState(false);
-  const [allLinks, setAllLinks] = useState<Array<any>>([]);
+  const [allLinks, setAllLinks] = useState<Array<any>>(
+    localStorage.getItem("links")
+      ? JSON.parse(localStorage.getItem("links")!!)
+      : []
+  );
   const [links, setLinks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
@@ -50,6 +54,7 @@ const Links = () => {
     setLoading(true);
     if (allLinks.length > 0 && user?.uid) {
       (async () => {
+        localStorage.setItem("links", JSON.stringify(allLinks));
         try {
           await updateDoc(doc(firebaseDB, "users", user?.uid!!), {
             bookmarks: allLinks[0].children,
