@@ -5,7 +5,8 @@ import { firebaseApp } from "../firebase/firebase";
 import Image from "next/image";
 import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
-import { MdLightMode, MdDarkMode } from "react-icons/md";
+import { MdLightMode, MdDarkMode, MdCheckCircleOutline } from "react-icons/md";
+import axios from "axios";
 
 const auth = getAuth(firebaseApp);
 
@@ -79,6 +80,8 @@ const Header = () => {
     new Date().toLocaleTimeString("en-US", timeOptions)
   );
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
+  const [temperature, setTemperature] = useState(null);
+  const [location, setLocation] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -91,6 +94,18 @@ const Header = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const updateTemperature = async (location: string) => {
+    try {
+      const { data } = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=a824fa87d701dca1e473519f17f09036`
+      );
+
+      setTemperature(data.main.temp);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   // useContext
   const { user, setUser } = useContext(UserContext);
@@ -107,7 +122,7 @@ const Header = () => {
     <div className="bg-background2 text-content h-12 justify-between flex content-center px-2 top-0 fixed w-full">
       <div className="flex gap-4 text-content">
         <p className="text-xl font-bold content-center grid">Dezktop</p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-40">
           <p className="content-center grid">{weekDay}</p>
           <p className="content-center grid">{date}</p>
           <p className="content-center grid">{month}</p>
@@ -115,6 +130,35 @@ const Header = () => {
             <p className="content-center grid">{time}</p>
             <p className="content-center grid">{dayPeriod}</p>
           </div>
+        </div>
+        {temperature && <p className="content-center grid">{temperature}°C</p>}
+        <div className="content-center grid">
+          <form
+            className="flex gap-1"
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateTemperature(location);
+            }}
+          >
+            <div className="h-8 p-2 bg-background focus:outline-none rounded-md flex">
+              <input
+                className="bg-transparent focus:outline-none"
+                placeholder="City and Country Code"
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                }}
+              />
+              <div className="content-center grid">
+                <MdCheckCircleOutline
+                  className="cursor-pointer"
+                  size={24}
+                  onClick={() => {
+                    updateTemperature(location);
+                  }}
+                />
+              </div>
+            </div>
+          </form>
         </div>
       </div>
 

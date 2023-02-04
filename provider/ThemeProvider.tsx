@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { firebaseDB } from "../firebase/firebase";
+import { UserContext } from "./UserProvider";
 
 export const THEME_CONTEXT_DEFAULT = {
   theme: "dark",
@@ -9,6 +12,7 @@ export const ThemeContext = createContext(THEME_CONTEXT_DEFAULT);
 
 export const useThemeContext = () => {
   const context = useContext(ThemeContext);
+  const { user } = useContext(UserContext);
 
   if (!context) {
     throw new Error("useThemeContext used outside ThemeContext provider");
@@ -19,7 +23,22 @@ export const useThemeContext = () => {
     document.body.classList.value =
       "transition-colors ease-in-out duration-200";
     document.body.classList.add(`theme-${context.theme}`);
-  }, [context.theme]);
+
+    (async () => {
+      try {
+        await updateDoc(doc(firebaseDB, "user_info", user?.uid!!), {
+          theme: context.theme,
+        });
+      } catch (error: any) {
+        if (error.code === "not-found") {
+          await setDoc(doc(firebaseDB, "user_info", user?.uid!!), {
+            theme: context.theme,
+          });
+        }
+        console.error(error);
+      }
+    })();
+  }, [context.theme, user?.uid]);
 
   return context;
 };
