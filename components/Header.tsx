@@ -5,9 +5,15 @@ import { firebaseApp } from "../firebase/firebase";
 import Image from "next/image";
 import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
-import { MdLightMode, MdDarkMode, MdCheckCircleOutline } from "react-icons/md";
+import { MdLightMode, MdDarkMode } from "react-icons/md";
 import axios from "axios";
+import { createClient } from "@supabase/supabase-js";
+import { useAutocomplete } from "@mui/base/AutocompleteUnstyled";
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+  process.env.NEXT_PUBLIC_SUPABASE_KEY as string
+);
 const auth = getAuth(firebaseApp);
 
 const timeOptions: Intl.DateTimeFormatOptions = {
@@ -82,6 +88,43 @@ const Header = () => {
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
   const [temperature, setTemperature] = useState(null);
   const [location, setLocation] = useState("");
+  const [options, setOptions] = useState<
+    Array<{ label: string; lat: number; lng: number }>
+  >([]);
+
+  const {
+    getRootProps,
+    getInputLabelProps,
+    getInputProps,
+    getListboxProps,
+    getOptionProps,
+    groupedOptions,
+  } = useAutocomplete({
+    id: "use-autocomplete-demo",
+    options,
+    isOptionEqualToValue: (option, value) => true,
+    getOptionLabel: (option) => option.label,
+    onChange: (event, value) => {
+      if (value) {
+        updateTemperature({ lat: value.lat, lng: value.lng });
+      }
+    },
+    onInputChange: async (e: any) => {
+      const { data } = await supabase
+        .from("cities")
+        .select("city, country, lat, lng")
+        .ilike("city", `${e.target.value}%`)
+        .limit(5);
+
+      setOptions(
+        data?.map((item: any) => ({
+          label: `${item.city}, ${item.country}`,
+          lat: item.lat,
+          lng: item.lng,
+        })) || []
+      );
+    },
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -95,10 +138,16 @@ const Header = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const updateTemperature = async (location: string) => {
+  const updateTemperature = async ({
+    lat,
+    lng,
+  }: {
+    lat: number;
+    lng: number;
+  }) => {
     try {
       const { data } = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=a824fa87d701dca1e473519f17f09036`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&appid=a824fa87d701dca1e473519f17f09036`
       );
 
       setTemperature(data.main.temp);
@@ -132,33 +181,33 @@ const Header = () => {
           </div>
         </div>
         {temperature && <p className="content-center grid">{temperature}°C</p>}
+
         <div className="content-center grid">
-          <form
-            className="flex gap-1"
-            onSubmit={(e) => {
-              e.preventDefault();
-              updateTemperature(location);
-            }}
-          >
-            <div className="h-8 p-2 bg-background focus:outline-none rounded-md flex">
+          <div className="relative">
+            <div {...getRootProps()}>
               <input
-                className="bg-transparent focus:outline-none"
-                placeholder="City and Country Code"
-                onChange={(e) => {
-                  setLocation(e.target.value);
-                }}
+                {...getInputProps()}
+                className="h-8 p-2 bg-background focus:outline-none w-44 rounded-md"
+                placeholder="location"
               />
-              <div className="content-center grid">
-                <MdCheckCircleOutline
-                  className="cursor-pointer"
-                  size={24}
-                  onClick={() => {
-                    updateTemperature(location);
-                  }}
-                />
-              </div>
             </div>
-          </form>
+            {groupedOptions.length > 0 ? (
+              <ul
+                className="h-8 rounded-md absolute -bottom-8 left-0 z-50"
+                {...getListboxProps()}
+              >
+                {groupedOptions.map((option: any, index: any) => (
+                  <li
+                    className="w-44 p-2 bg-background focus:bg-background2 hover:bg-background2 cursor-pointer"
+                    key={index}
+                    {...getOptionProps({ option, index })}
+                  >
+                    {option.label}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
       </div>
 

@@ -33,3 +33,8 @@ body {
   --button: #0f62fe; /* interactive */
   --button-hover: #0353e9; /* interactive-hover */
 }
+
+.Mui-focused {
+  background-color: var(--background2);
+  color: var(--content);
+}
