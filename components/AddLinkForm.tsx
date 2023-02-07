@@ -74,7 +74,9 @@ export default function AddLinkForm({
           }
         }
         addedLink.name =
-          addedLink.name + `${duplicateCount > 0 && `(${duplicateCount})`}`;
+          duplicateCount == 0
+            ? addedLink.name
+            : `${addedLink.name} (${duplicateCount})`;
         arr.push(addedLink);
         arr.sort((a, b) => {
           return a.type.localeCompare(b.type);

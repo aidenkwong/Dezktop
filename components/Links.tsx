@@ -12,7 +12,13 @@ const Links = () => {
   const [allLinks, setAllLinks] = useState<Array<any>>(
     localStorage.getItem("links")
       ? JSON.parse(localStorage.getItem("links")!!)
-      : []
+      : [
+          {
+            name: "My Bookmarks",
+            type: "folder",
+            children: [],
+          },
+        ]
   );
   const [links, setLinks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
