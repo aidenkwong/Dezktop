@@ -46,16 +46,14 @@ const Header = () => {
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
   const [temperature, setTemperature] = useState(null);
   const [options, setOptions] = useState<Array<Location>>([]);
-  const [showChangeLocation, setShowChangeLocation] = useState(true);
-  const [location, setLocation] = useState<Location | null>();
+
+  const [location, setLocation] = useState<Location | null>(
+    JSON.parse(localStorage.getItem("location")!!) || null
+  );
+  const [showChangeLocation, setShowChangeLocation] = useState(!location);
   const [temperatureLoading, setTemperatureLoading] = useState(false);
 
   const changeLocationInputRef = useRef<HTMLInputElement>(null);
-
-  // ComponentDidMount
-  useEffect(() => {
-    setLocation(JSON.parse(localStorage.getItem("location")!!) || null);
-  }, []);
 
   const {
     getRootProps,
