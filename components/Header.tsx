@@ -7,16 +7,21 @@ import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import axios from "axios";
-import { createClient } from "@supabase/supabase-js";
 import { useAutocomplete } from "@mui/base/AutocompleteUnstyled";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import { firebaseDB } from "../firebase/firebase";
 import CircularProgress from "@mui/material/CircularProgress";
+import { formatAMPM, monthNumToStr, weekdayNumToStr } from "../helper/helper";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import useOutside from "../helper/hooks/useOutside";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY as string
-);
+type Location = {
+  city: string;
+  country: string;
+  lat: number;
+  lng: number;
+};
+
 const auth = getAuth(firebaseApp);
 
 const timeOptions: Intl.DateTimeFormatOptions = {
@@ -25,62 +30,8 @@ const timeOptions: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-function weekdayNumToStr(weekday: number) {
-  switch (weekday) {
-    case 0:
-      return "Sun";
-    case 1:
-      return "Mon";
-    case 2:
-      return "Tues";
-    case 3:
-      return "Wed";
-    case 4:
-      return "Thu";
-    case 5:
-      return "Fri";
-    case 6:
-      return "Sat";
-  }
-}
-
-function monthNumToStr(month: number) {
-  switch (month) {
-    case 0:
-      return "Jan";
-    case 1:
-      return "Feb";
-    case 2:
-      return "Mar";
-    case 3:
-      return "Apr";
-    case 4:
-      return "May";
-    case 5:
-      return "Jun";
-    case 6:
-      return "Jul";
-    case 7:
-      return "Aug";
-    case 8:
-      return "Sep";
-    case 9:
-      return "Oct";
-    case 10:
-      return "Nov";
-    case 11:
-      return "Dec";
-  }
-}
-
-function formatAMPM(date: Date) {
-  var hours = date.getHours();
-  var ampm = hours >= 12 ? "PM" : "AM";
-
-  return ampm;
-}
-
 const Header = () => {
+  const supabase = useSupabaseClient();
   // useContext
   const { user, setUser } = useContext(UserContext);
   const { theme, setTheme } = useThemeContext();
@@ -94,24 +45,20 @@ const Header = () => {
   );
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
   const [temperature, setTemperature] = useState(null);
-  const [options, setOptions] = useState<
-    Array<{
-      label: string;
-      city: string;
-      country: string;
-      lat: number;
-      lng: number;
-    }>
-  >([]);
+  const [options, setOptions] = useState<Array<Location>>([]);
   const [showChangeLocation, setShowChangeLocation] = useState(true);
-  const [location, setLocation] = useState<string>();
+  const [location, setLocation] = useState<Location | null>();
   const [temperatureLoading, setTemperatureLoading] = useState(false);
 
   const changeLocationInputRef = useRef<HTMLInputElement>(null);
 
+  // ComponentDidMount
+  useEffect(() => {
+    setLocation(JSON.parse(localStorage.getItem("location")!!) || null);
+  }, []);
+
   const {
     getRootProps,
-    getInputLabelProps,
     getInputProps,
     getListboxProps,
     getOptionProps,
@@ -120,13 +67,14 @@ const Header = () => {
     id: "use-autocomplete-demo",
     options,
     isOptionEqualToValue: () => true,
-    getOptionLabel: (option) => option.label,
+    getOptionLabel: (option) => `${option.city}, ${option.country}`,
     onChange: async (_event, value) => {
       if (value) {
         setShowChangeLocation(false);
         updateTemperature({ lat: value.lat, lng: value.lng });
-        setLocation(value.city);
+        setLocation(value);
         try {
+          localStorage.setItem("location", JSON.stringify(value));
           await updateDoc(doc(firebaseDB, "user_info", user?.uid!!), {
             location: {
               city: value.city,
@@ -161,7 +109,6 @@ const Header = () => {
 
       setOptions(
         data?.map((item: any) => ({
-          label: `${item.city}, ${item.country}`,
           city: item.city,
           country: item.country,
           lat: item.lat,
@@ -187,10 +134,10 @@ const Header = () => {
         const data = docSnap.data();
 
         if (data?.location) {
-          const { lat, lng, city } = data.location;
+          const { lat, lng } = data.location;
 
           updateTemperature({ lat, lng });
-          setLocation(city);
+          setLocation(data.location);
           setShowChangeLocation(false);
         } else {
           setShowChangeLocation(true);
@@ -221,31 +168,26 @@ const Header = () => {
       setTemperatureLoading(false);
       setTemperature(data.main.temp);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
-  const useOutside = (ref: any) => {
-    useEffect(() => {
-      const handleClickOutside = (event: any) => {
-        if (ref.current && !ref.current.contains(event.target)) {
-          if (temperature && location) {
-            setShowChangeLocation(false);
-          } else {
-            setShowChangeLocation(true);
-          }
-        }
-      };
+  useOutside(changeLocationInputRef, () => {
+    if (temperature && location) {
+      setShowChangeLocation(false);
+    } else {
+      setShowChangeLocation(true);
+    }
+  });
 
-      document.addEventListener("mousedown", handleClickOutside);
-
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [ref]);
-  };
-
-  useOutside(changeLocationInputRef);
+  useEffect(() => {
+    if (location) {
+      localStorage.setItem("location", JSON.stringify(location));
+    } else {
+      localStorage.removeItem("location");
+      setShowChangeLocation(true);
+    }
+  }, [location]);
 
   // functions
   const signOut = async () => {
@@ -257,18 +199,18 @@ const Header = () => {
   return (
     <div className="bg-background2 text-content h-12 justify-between flex content-center px-2 top-0 fixed w-full">
       <div className="flex gap-4 text-content">
-        <p className="text-xl font-bold content-center grid">Dezktop</p>
+        <div className="text-xl font-bold content-center grid">Dezktop</div>
         <div className="flex gap-2 w-40">
-          <p className="content-center grid">{weekDay}</p>
-          <p className="content-center grid">{date}</p>
-          <p className="content-center grid">{month}</p>
+          <div className="content-center grid">{weekDay}</div>
+          <div className="content-center grid">{date}</div>
+          <div className="content-center grid">{month}</div>
           <div className="flex gap-1">
-            <p className="content-center grid">{time}</p>
-            <p className="content-center grid">{dayPeriod}</p>
+            <div className="content-center grid">{time}</div>
+            <div className="content-center grid">{dayPeriod}</div>
           </div>
         </div>
         {temperature && !temperatureLoading && (
-          <p className="content-center grid">{temperature}°C</p>
+          <div className="content-center grid">{temperature}°C</div>
         )}
         {temperatureLoading && (
           <div className="content-center grid">
@@ -287,7 +229,7 @@ const Header = () => {
                   autoFocus={true}
                 />
               </div>
-              {groupedOptions.length > 0 ? (
+              {groupedOptions.length > 0 && (
                 <ul
                   {...getListboxProps()}
                   className="h-8 rounded-md absolute -bottom-8 left-0 z-50"
@@ -298,11 +240,11 @@ const Header = () => {
                       className="w-44 p-2 bg-background focus:bg-background2 hover:bg-background2 cursor-pointer"
                       key={index}
                     >
-                      {option.label}
+                      {option.city}, {option.country}
                     </li>
                   ))}
                 </ul>
-              ) : null}
+              )}
             </div>
           </div>
         ) : (
@@ -310,7 +252,7 @@ const Header = () => {
             className="content-center grid cursor-pointer"
             onClick={() => setShowChangeLocation(true)}
           >
-            {location}
+            {location?.city}
           </div>
         )}
       </div>

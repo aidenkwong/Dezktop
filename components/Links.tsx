@@ -9,17 +9,13 @@ import Link from "./Link";
 const Links = () => {
   // useState
   const [loading, setLoading] = useState(false);
-  const [allLinks, setAllLinks] = useState<Array<any>>(
-    localStorage.getItem("links")
-      ? JSON.parse(localStorage.getItem("links")!!)
-      : [
-          {
-            name: "My Bookmarks",
-            type: "folder",
-            children: [],
-          },
-        ]
-  );
+  const [allLinks, setAllLinks] = useState<Array<any>>([
+    {
+      name: "My Bookmarks",
+      type: "folder",
+      children: [],
+    },
+  ]);
   const [links, setLinks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
@@ -30,6 +26,19 @@ const Links = () => {
 
   // useContext
   const { user } = useContext(UserContext);
+
+  // ComponentDidMount
+  useEffect(() => {
+    setAllLinks(
+      JSON.parse(localStorage.getItem("links")!!) || [
+        {
+          name: "My Bookmarks",
+          type: "folder",
+          children: [],
+        },
+      ]
+    );
+  }, []);
 
   // useEffect
   useEffect(() => {
@@ -58,7 +67,7 @@ const Links = () => {
 
   useEffect(() => {
     setLoading(true);
-    if (allLinks.length > 0 && user?.uid) {
+    if (allLinks[0].children.length > 0 && user?.uid) {
       (async () => {
         localStorage.setItem("links", JSON.stringify(allLinks));
         try {

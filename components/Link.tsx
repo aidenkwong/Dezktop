@@ -1,5 +1,6 @@
 import { MdFolderOpen } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import useOutside from "../helper/hooks/useOutside";
 // import Image from "next/image";
 
 const Link = ({
@@ -25,24 +26,7 @@ const Link = ({
   // useRef
   const menuRef = useRef(null);
 
-  // hooks
-  const useOutside = (ref: any) => {
-    useEffect(() => {
-      const handleClickOutside = (event: any) => {
-        if (ref.current && !ref.current.contains(event.target)) {
-          setShowMenu(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [ref]);
-  };
-
-  useOutside(menuRef);
+  useOutside(menuRef, () => setShowMenu(false));
 
   return (
     <>
