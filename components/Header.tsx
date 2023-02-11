@@ -34,6 +34,8 @@ const Header = () => {
   const supabase = useSupabaseClient();
   // useContext
   const { user, setUser } = useContext(UserContext);
+
+  console.log(user);
   const { theme, setTheme } = useThemeContext();
 
   const [weekDay, setWeekDay] = useState(weekdayNumToStr(new Date().getDay()));
@@ -276,13 +278,13 @@ const Header = () => {
           )}
         </div>
         <div className="content-center grid">
-          <p>{user?.displayName}</p>
+          <p>{user?.displayName || user?.email}</p>
         </div>
         <div className="content-center grid">
           <div className="w-8 h-8">
             <Image
               className="rounded-full"
-              src={user?.photoURL!!}
+              src={user?.photoURL || "/assets/user.jpeg"}
               width={32}
               height={32}
               alt={"user photo"}

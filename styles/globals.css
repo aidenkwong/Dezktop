@@ -34,6 +34,14 @@ body {
   --button-hover: #0353e9; /* interactive-hover */
 }
 
+.input {
+  all: unset;
+}
+
+.input:autofill {
+  all: unset;
+}
+
 .Mui-focused {
   background-color: var(--background2);
   color: var(--content);

@@ -19,11 +19,11 @@ export default function App({ Component, pageProps }: AppProps) {
       supabaseClient={supabase}
       initialSession={pageProps.initialSession}
     >
-      <UserProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <UserProvider>
           <Component {...pageProps} />
-        </ThemeProvider>
-      </UserProvider>
+        </UserProvider>
+      </ThemeProvider>
     </SessionContextProvider>
   );
 }

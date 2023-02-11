@@ -20,6 +20,7 @@
     "@next/font": "13.0.7",
     "@supabase/auth-helpers-nextjs": "^0.5.4",
     "@supabase/auth-helpers-react": "^0.3.1",
+    "@supabase/auth-ui-react": "^0.2.7",
     "@supabase/supabase-js": "^2.7.1",
     "@types/node": "18.11.17",
     "@types/react": "18.0.26",

@@ -9,15 +9,7 @@ import Link from "./Link";
 const Links = () => {
   // useState
   const [loading, setLoading] = useState(false);
-  const [allLinks, setAllLinks] = useState<Array<any>>(
-    JSON.parse(localStorage.getItem("links")!!) || [
-      {
-        name: "My Bookmarks",
-        type: "folder",
-        children: [],
-      },
-    ]
-  );
+
   const [links, setLinks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
   const [showAddLinkForm, setShowAddLinkForm] = useState(false);
@@ -29,36 +21,52 @@ const Links = () => {
   // useContext
   const { user } = useContext(UserContext);
 
+  const [allLinks, setAllLinks] = useState<Array<any>>(
+    JSON.parse(localStorage.getItem(`${user?.uid}_links`)!!) || [
+      {
+        name: "My Bookmarks",
+        type: "folder",
+        children: [],
+      },
+    ]
+  );
+
   // useEffect
   useEffect(() => {
-    if (user?.uid) {
-      (async () => {
-        try {
-          const docRef = doc(firebaseDB, "link", user?.uid!!);
-          const docSnap = await getDoc(docRef);
-          const data = docSnap.data();
+    (async () => {
+      try {
+        const docRef = doc(firebaseDB, "link", user?.uid!!);
+        const docSnap = await getDoc(docRef);
+        const data = docSnap.data();
 
-          if (data) {
-            setAllLinks([
-              {
-                name: "My Bookmarks",
-                type: "folder",
-                children: data.bookmarks,
-              },
-            ]);
-          }
-        } catch (error) {
-          console.error(error);
+        if (data) {
+          setAllLinks([
+            {
+              name: "My Bookmarks",
+              type: "folder",
+              children: data.bookmarks,
+            },
+          ]);
+        } else {
+          setAllLinks([
+            {
+              name: "My Bookmarks",
+              type: "folder",
+              children: [],
+            },
+          ]);
         }
-      })();
-    }
+      } catch (error) {
+        console.error(error);
+      }
+    })();
   }, [user]);
 
   useEffect(() => {
     setLoading(true);
-    if (allLinks[0].children.length > 0 && user?.uid) {
+    if (allLinks && user?.uid) {
       (async () => {
-        localStorage.setItem("links", JSON.stringify(allLinks));
+        localStorage.setItem(`${user.uid}_links`, JSON.stringify(allLinks));
         try {
           await updateDoc(doc(firebaseDB, "link", user?.uid!!), {
             bookmarks: allLinks[0].children,
