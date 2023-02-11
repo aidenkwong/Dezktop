@@ -11,7 +11,7 @@ import Router from "next/router";
 import { useContext, useState, FormEvent, useEffect } from "react";
 import { firebaseApp } from "../../firebase/firebase";
 import { UserContext } from "../../provider/UserProvider";
-import { ImGoogle, ImFacebook } from "react-icons/Im";
+import { ImGoogle, ImFacebook } from "react-icons/im";
 import { ThemeContext } from "../../provider/ThemeProvider";
 import { useRouter } from "next/router";
 
@@ -21,13 +21,13 @@ const twitterAuthProvider = new TwitterAuthProvider();
 const auth = getAuth(firebaseApp);
 
 const Auth = () => {
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
   const router = useRouter();
 
   useEffect(() => {
     document.body.classList.value = "";
     document.body.classList.add(`theme-${theme}`);
-  }, []);
+  }, [theme]);
 
   // useState
   const [signUp, setSignUp] = useState(false);
@@ -97,12 +97,12 @@ const Auth = () => {
     Router.push("/");
   };
 
-  const signInWithTwitter = async () => {
-    const { user } = await signInWithPopup(auth, twitterAuthProvider);
+  // const signInWithTwitter = async () => {
+  //   const { user } = await signInWithPopup(auth, twitterAuthProvider);
 
-    setUser(user);
-    Router.push("/");
-  };
+  //   setUser(user);
+  //   Router.push("/");
+  // };
 
   return (
     <div className={`theme-${theme}`}>
