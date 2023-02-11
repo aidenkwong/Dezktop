@@ -5,6 +5,18 @@ import { firebaseDB } from "../firebase/firebase";
 import { UserContext } from "../provider/UserProvider";
 import AddLinkForm from "./AddLinkForm";
 import Link from "./Link";
+import CopyButton from "./utils/CopyButton";
+
+const windowsChromeBookmarksPath =
+  "%LocalAppData%\\Microsoft\\Chrome\\User Data\\Default\\Bookmarks";
+const windowsEdgeBookmarksPath =
+  "%LocalAppData%\\Microsoft\\Edge\\User Data\\Default\\Bookmarks";
+
+const macOsSafariBookmarksPath = "~/Library/Safari/Bookmarks";
+const macOsChromeBookmarksPath =
+  "~/Library/Application Support/Google/Chrome/Default/Bookmarks";
+const macOsEdgeBookmarksPath =
+  "~/Library/Application Support/Microsoft Edge/Default/Bookmarks";
 
 const Links = () => {
   // useState
@@ -458,32 +470,64 @@ const Links = () => {
           />
         </div>
       </div>
-
+      <p>
+        Import your bookmarks from your browser.{" "}
+        <input type="file" onChange={fileOnChange} />
+      </p>
       <div className="bg-foreground my-2 p-2 w-fit rounded">
-        <p>
-          To import your bookmarks from chrome, upload the file in the following
-          path of your computer:
-        </p>
         <div className="flex gap-2">
-          Windows:{" "}
-          <p className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
-            %LocalAppData%\Google\Chrome\User Data\Default\Bookmarks
-          </p>
+          <span className="w-20"> Windows:</span>
+          <ol>
+            <li>1. Copy the path below</li>
+            <span>Chrome: </span>
+            <div className="bg-foreground2 flex-1 p-2 my-2 rounded  leading-3 flex gap-2 items-center justify-between">
+              {windowsChromeBookmarksPath}
+              <CopyButton size={24} text={windowsChromeBookmarksPath} />
+            </div>
+            <li>
+              <span>Edge: </span>
+              <div className="bg-foreground2 flex-1 p-2 my-2 rounded  leading-3 flex gap-2 items-center justify-between">
+                {windowsEdgeBookmarksPath}
+                <CopyButton size={24} text={windowsEdgeBookmarksPath} />
+              </div>
+            </li>
+            <li>2. Click Choose File</li>
+            <li>3. Paste the path into the address bar</li>
+            <li>4. press enter</li>
+          </ol>
         </div>
         <div className="flex gap-2">
-          Mac:{" "}
+          <span className="w-20"> MacOS</span>
           <div>
             <ol>
-              <li>1. Click Choose File</li>
-              <li>2. Press shift + cmd + g</li>
-              <li>3. Enter the following path and press enter:</li>
-              <li className="bg-foreground2 w-fit p-1 rounded text-sm leading-3">
-                ~/Library/Application Support/Google/Chrome/Default/Bookmarks
+              <li>1. Copy the path below</li>
+              <li>
+                <span>Chrome: </span>
+                <div className="bg-foreground2 flex-1 p-2 my-2 rounded  leading-3 flex gap-2 items-center justify-between">
+                  {macOsChromeBookmarksPath}
+                  <CopyButton size={24} text={macOsChromeBookmarksPath} />
+                </div>
               </li>
+              <li>
+                <span>Safari: </span>
+                <div className="bg-foreground2 flex-1 p-2 my-2 rounded  leading-3 flex gap-2 items-center justify-between">
+                  {macOsSafariBookmarksPath}
+                  <CopyButton size={24} text={macOsSafariBookmarksPath} />
+                </div>
+              </li>
+              <li>
+                <span>Edge: </span>
+                <div className="bg-foreground2 flex-1 p-2 my-2 rounded  leading-3 flex gap-2 items-center justify-between">
+                  {macOsEdgeBookmarksPath}
+                  <CopyButton size={24} text={macOsEdgeBookmarksPath} />
+                </div>
+              </li>
+              <li>2. Click Choose File</li>
+              <li>3. Press shift + cmd + g</li>
+              <li>4. Enter the path above and press enter</li>
             </ol>
           </div>
         </div>
-        <input type="file" onChange={fileOnChange} />
       </div>
     </div>
   );
