@@ -1,5 +1,5 @@
 import { MdFolderOpen } from "react-icons/md";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useOutside from "../helper/hooks/useOutside";
 // import Image from "next/image";
 
@@ -27,6 +27,10 @@ const Link = ({
   const menuRef = useRef(null);
 
   useOutside(menuRef, () => setShowMenu(false));
+
+  useEffect(() => {
+    setSrc("https://" + url?.split("/")[2] + "/favicon.ico");
+  }, [directory, url]);
 
   return (
     <>

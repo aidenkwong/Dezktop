@@ -3,7 +3,6 @@ import {
   getAuth,
   signInWithPopup,
   FacebookAuthProvider,
-  TwitterAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
@@ -17,7 +16,7 @@ import { useRouter } from "next/router";
 
 const googleAuthProvider = new GoogleAuthProvider();
 const facebookAuthProvider = new FacebookAuthProvider();
-const twitterAuthProvider = new TwitterAuthProvider();
+// const twitterAuthProvider = new TwitterAuthProvider();
 const auth = getAuth(firebaseApp);
 
 const Auth = () => {

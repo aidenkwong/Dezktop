@@ -36,10 +36,14 @@ body {
 
 .input {
   all: unset;
+  background-color: var(--background2);
+  color: var(--content);
 }
 
 .input:autofill {
   all: unset;
+  background-color: var(--background2);
+  color: var(--content);
 }
 
 .Mui-focused {

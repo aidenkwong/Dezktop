@@ -15,6 +15,7 @@ export default function AddLinkForm({
   setAllLinks,
   directory,
 }: any) {
+  // useState
   const [formData, setFormData] = useState<FormData>({
     name: "",
     type: "url",
@@ -48,12 +49,8 @@ export default function AddLinkForm({
 
     let tmpAllLinks = [...allLinks];
 
-    const dfs = (
-      arr: any[],
-      key: string,
-
-      depth: number
-    ) => {
+    // Traverse the tree to find the correct directory
+    const dfs = (arr: any[], key: string, depth: number) => {
       const keyArr = key.split("/");
 
       let curDirArr: string[] = [];
@@ -81,7 +78,6 @@ export default function AddLinkForm({
         arr.sort((a, b) => {
           return a.type.localeCompare(b.type);
         });
-        // setLinks(arr);
       }
 
       depth++;
@@ -122,7 +118,7 @@ export default function AddLinkForm({
                   name: e.target.value,
                 }))
               }
-              className="text-black px-2 w-full bg-background text-content outline-none focus:outline-foreground p-1"
+              className="text-content px-2 w-full bg-background outline-none focus:outline-foreground p-1"
             />
           </div>
           <div>
@@ -156,7 +152,7 @@ export default function AddLinkForm({
                     url: e.target.value,
                   }))
                 }
-                className="text-black px-2 w-full bg-background text-content outline-none focus:outline-foreground p-1"
+                className="marker:px-2 w-full bg-background text-content outline-none focus:outline-foreground p-1"
               />
             </div>
           )}
