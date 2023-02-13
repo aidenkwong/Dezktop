@@ -7,7 +7,7 @@ import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import axios from "axios";
-import { useAutocomplete } from "@mui/base/AutocompleteUnstyled";
+import { useAutocomplete } from "@mui/material";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import { firebaseDB } from "../firebase/firebase";
 import CircularProgress from "@mui/material/CircularProgress";
