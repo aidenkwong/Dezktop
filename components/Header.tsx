@@ -6,21 +6,16 @@ import Image from "next/image";
 import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
-import axios from "axios";
 import { useAutocomplete } from "@mui/material";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import { firebaseDB } from "../firebase/firebase";
-import CircularProgress from "@mui/material/CircularProgress";
+
 import { formatAMPM, monthNumToStr, weekdayNumToStr } from "../helper/helper";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import useOutside from "../helper/hooks/useOutside";
 
-type Location = {
-  city: string;
-  country: string;
-  lat: number;
-  lng: number;
-};
+import Location from "../types/location.type";
+import TemperatureDegree from "./header/TemperatureDegree";
 
 const auth = getAuth(firebaseApp);
 
@@ -31,32 +26,31 @@ const timeOptions: Intl.DateTimeFormatOptions = {
 };
 
 const Header = () => {
+  // Supabase client hook
   const supabase = useSupabaseClient();
+
   // useContext
   const { user, setUser } = useContext(UserContext);
-
-  console.log(user);
   const { theme, setTheme } = useThemeContext();
 
+  // useState
   const [weekDay, setWeekDay] = useState(weekdayNumToStr(new Date().getDay()));
-
   const [date, setDate] = useState(new Date().getDate());
   const [month, setMonth] = useState(monthNumToStr(new Date().getMonth()));
   const [time, setTime] = useState(
     new Date().toLocaleTimeString("en-US", timeOptions)
   );
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
-  const [temperature, setTemperature] = useState(null);
   const [options, setOptions] = useState<Array<Location>>([]);
-
   const [location, setLocation] = useState<Location | null>(
     JSON.parse(localStorage.getItem("location")!!) || null
   );
   const [showChangeLocation, setShowChangeLocation] = useState(!location);
-  const [temperatureLoading, setTemperatureLoading] = useState(false);
 
+  // useRef
   const changeLocationInputRef = useRef<HTMLInputElement>(null);
 
+  // Hook for auto-complete component
   const {
     getRootProps,
     getInputProps,
@@ -64,14 +58,12 @@ const Header = () => {
     getOptionProps,
     groupedOptions,
   } = useAutocomplete({
-    id: "use-autocomplete-demo",
+    id: "location",
     options,
-    isOptionEqualToValue: () => true,
     getOptionLabel: (option) => `${option.city}, ${option.country}`,
     onChange: async (_event, value) => {
       if (value) {
         setShowChangeLocation(false);
-        updateTemperature({ lat: value.lat, lng: value.lng });
         setLocation(value);
         try {
           localStorage.setItem("location", JSON.stringify(value));
@@ -118,7 +110,9 @@ const Header = () => {
     },
   });
 
+  // Component did mount
   useEffect(() => {
+    // Update time every second
     const interval = setInterval(() => {
       setWeekDay(weekdayNumToStr(new Date().getDay()));
       setDate(new Date().getDate());
@@ -127,6 +121,7 @@ const Header = () => {
       setDayPeriod(formatAMPM(new Date()));
     }, 1000);
 
+    // Get user location
     (async () => {
       try {
         const docRef = doc(firebaseDB, "user_info", user?.uid!!);
@@ -134,9 +129,6 @@ const Header = () => {
         const data = docSnap.data();
 
         if (data?.location) {
-          const { lat, lng } = data.location;
-
-          updateTemperature({ lat, lng });
           setLocation(data.location);
           setShowChangeLocation(false);
         } else {
@@ -151,35 +143,6 @@ const Header = () => {
     return () => clearInterval(interval);
   }, [user?.uid]);
 
-  const updateTemperature = async ({
-    lat,
-    lng,
-  }: {
-    lat: number;
-    lng: number;
-  }) => {
-    try {
-      setTemperatureLoading(true);
-
-      const { data } = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&appid=a824fa87d701dca1e473519f17f09036`
-      );
-
-      setTemperatureLoading(false);
-      setTemperature(data.main.temp);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useOutside(changeLocationInputRef, () => {
-    if (temperature && location) {
-      setShowChangeLocation(false);
-    } else {
-      setShowChangeLocation(true);
-    }
-  });
-
   useEffect(() => {
     if (location) {
       localStorage.setItem("location", JSON.stringify(location));
@@ -188,6 +151,15 @@ const Header = () => {
       setShowChangeLocation(true);
     }
   }, [location]);
+
+  // Click outside hook
+  useOutside(changeLocationInputRef, () => {
+    if (location) {
+      setShowChangeLocation(false);
+    } else {
+      setShowChangeLocation(true);
+    }
+  });
 
   // functions
   const signOut = async () => {
@@ -209,15 +181,7 @@ const Header = () => {
             <div className="content-center grid">{dayPeriod}</div>
           </div>
         </div>
-        {temperature && !temperatureLoading && (
-          <div className="content-center grid">{temperature}°C</div>
-        )}
-        {temperatureLoading && (
-          <div className="content-center grid">
-            <CircularProgress size={20} color="inherit" thickness={6} />
-          </div>
-        )}
-
+        {location && <TemperatureDegree location={location} />}
         {showChangeLocation ? (
           <div className="content-center grid" ref={changeLocationInputRef}>
             <div className="relative">
