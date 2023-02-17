@@ -3,6 +3,15 @@
 ## Description
 A website as a desktop. There are many features planned to implement.
 
+## Techstack
+### Frontend
+- NextJS
+- Tailwind CSS
+### Platform
+- Firebase
+- Supabase
+- Vercel
+
 ## Progress
 ### Features Available Now
 - Basic Authentication
