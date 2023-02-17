@@ -16,6 +16,7 @@ import useOutside from "../helper/hooks/useOutside";
 
 import Location from "../types/location.type";
 import TemperatureDegree from "./header/TemperatureDegree";
+import Tooltip from "./utils/Tooltip";
 
 const auth = getAuth(firebaseApp);
 
@@ -212,11 +213,12 @@ const Header = () => {
             </div>
           </div>
         ) : (
-          <div
-            className="content-center grid cursor-pointer"
-            onClick={() => setShowChangeLocation(true)}
-          >
-            {location?.city}
+          <div className="content-center grid cursor-pointer">
+            <Tooltip title="change location">
+              <div onClick={() => setShowChangeLocation(true)}>
+                {location?.city}
+              </div>
+            </Tooltip>
           </div>
         )}
       </div>
