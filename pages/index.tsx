@@ -1,34 +1,28 @@
 import Head from "next/head";
 import Header from "../components/Header";
 import { useContext, useEffect } from "react";
-import { UserContext } from "../provider/UserProvider";
-import Router from "next/router";
-import { User } from "firebase/auth";
 import Links from "../components/Links";
 import { ThemeContext } from "../provider/ThemeProvider";
+import { useUser } from "@supabase/auth-helpers-react";
+import Router from "next/router";
 
 export default function Home() {
   // useContext
-  const { user, setUser } = useContext(UserContext);
+  const user = useUser();
   const { theme, setTheme } = useContext(ThemeContext);
 
   // useEffect
   useEffect(() => {
-    const localStorageUser = localStorage.getItem("user");
     const localStorageTheme = localStorage.getItem("theme");
 
     if (localStorageTheme) {
       setTheme(localStorageTheme);
     }
-    if (!localStorageUser) {
-      Router.push("/auth");
-    } else {
-      setUser(JSON.parse(localStorageUser) as User);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!user) {
+      Router.push("/auth");
+    }
   }, []);
-
-  if (!user) return <></>;
 
   return (
     <div className={theme}>

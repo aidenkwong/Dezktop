@@ -1,27 +1,15 @@
-import {
-  GoogleAuthProvider,
-  getAuth,
-  signInWithPopup,
-  FacebookAuthProvider,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
 import Router from "next/router";
 import { useContext, useState, FormEvent, useEffect } from "react";
-import { firebaseApp } from "../../firebase/firebase";
 import { UserContext } from "../../provider/UserProvider";
 import { ImGoogle, ImFacebook } from "react-icons/im";
 import { ThemeContext } from "../../provider/ThemeProvider";
 import { useRouter } from "next/router";
-
-const googleAuthProvider = new GoogleAuthProvider();
-const facebookAuthProvider = new FacebookAuthProvider();
-// const twitterAuthProvider = new TwitterAuthProvider();
-const auth = getAuth(firebaseApp);
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 
 const Auth = () => {
   const { theme } = useContext(ThemeContext);
   const router = useRouter();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     document.body.classList.value = "";
@@ -36,7 +24,9 @@ const Auth = () => {
   const [error, setError] = useState("");
 
   // useContext
-  const { setUser } = useContext(UserContext);
+  const user = useUser();
+
+  console.log(user);
 
   useEffect(() => {
     if (!signUp) setError("");
@@ -44,31 +34,30 @@ const Auth = () => {
 
   // functions
   const handleSignUpWithPassword = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-      setUser(userCredential.user);
-      Router.push("/");
-    } catch (error: any) {
-      if (error.code === "auth/email-already-in-use") {
-        setError("Email already in use.");
-      }
+    if (error) {
+      setError(error.message);
+      return;
     }
+
+    Router.push("/");
   };
 
   const handleSignInWithPassword = async () => {
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
-    );
+      password,
+    });
 
-    if (!userCredential.user) return;
-    setUser(userCredential.user);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
     Router.push("/");
   };
 
@@ -83,16 +72,33 @@ const Auth = () => {
   };
 
   const signInWithGoogle = async () => {
-    const { user } = await signInWithPopup(auth, googleAuthProvider);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "http://localhost:3000",
+      },
+    });
 
-    setUser(user);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
     Router.push("/");
   };
 
   const signInWithFacebook = async () => {
-    const { user } = await signInWithPopup(auth, facebookAuthProvider);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: "http://localhost:3000",
+      },
+    });
 
-    setUser(user);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     Router.push("/");
   };
 
@@ -108,11 +114,11 @@ const Auth = () => {
       <div className="grid h-screen place-items-center">
         <div className="flex flex-col gap-4 items-start">
           {!signUp ? (
-            <h1 className="text-3xl font-bold">Sign In</h1>
+            <h1 className="text-3xl font-bold">Dezktop</h1>
           ) : (
-            <h1 className="text-3xl font-bold">Sign Up</h1>
+            <h1 className="text-3xl font-bold">Dezktop</h1>
           )}
-          <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
               <label htmlFor="email">Email</label>
               <input
@@ -164,7 +170,7 @@ const Auth = () => {
               <button
                 type="submit"
                 onClick={handleSignInWithPassword}
-                className="bg-background2   p-2 w-72 rounded text-content"
+                className="bg-background2 hover:bg-buttonHover  p-2 w-72 rounded text-content"
               >
                 Sign in
               </button>
@@ -172,17 +178,17 @@ const Auth = () => {
               <button
                 type="submit"
                 onClick={handleSignUpWithPassword}
-                className="bg-background2   p-2 w-72 rounded text-content"
+                className="bg-background2 hover:bg-buttonHover  p-2 w-72 rounded text-content"
               >
                 Sign up
               </button>
             )}
           </form>
           {!signUp && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">
               <button
                 onClick={signInWithGoogle}
-                className="flex gap-2 items-center bg-background2   p-2 w-72 rounded text-content"
+                className="flex gap-2 items-center bg-background2 hover:bg-buttonHover  p-2 w-72 rounded text-content"
               >
                 <ImGoogle size={20} />
                 <span className="flex justify-center w-full">
@@ -191,7 +197,7 @@ const Auth = () => {
               </button>
               <button
                 onClick={signInWithFacebook}
-                className="flex gap-2 items-center bg-background2   p-2 w-72 rounded text-content"
+                className="flex gap-2 items-center bg-background2 hover:bg-buttonHover  p-2 w-72 rounded text-content"
               >
                 <ImFacebook size={20} />
                 <span className="flex justify-center w-full">
