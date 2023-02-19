@@ -1,14 +1,11 @@
 import Router from "next/router";
-import { useContext, useState, FormEvent, useEffect } from "react";
-import { UserContext } from "../../provider/UserProvider";
+import { useState, FormEvent, useEffect } from "react";
 import { ImGoogle, ImFacebook } from "react-icons/im";
-import { ThemeContext } from "../../provider/ThemeProvider";
-import { useRouter } from "next/router";
-import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
+import { useThemeContext } from "../../provider/ThemeProvider";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 const Auth = () => {
-  const { theme } = useContext(ThemeContext);
-  const router = useRouter();
+  const { theme } = useThemeContext();
   const supabase = useSupabaseClient();
 
   useEffect(() => {
@@ -24,13 +21,9 @@ const Auth = () => {
   const [error, setError] = useState("");
 
   // useContext
-  const user = useUser();
-
-  console.log(user);
-
   useEffect(() => {
     if (!signUp) setError("");
-  }, [router, signUp]);
+  }, [signUp]);
 
   // functions
   const handleSignUpWithPassword = async () => {
@@ -43,8 +36,6 @@ const Auth = () => {
       setError(error.message);
       return;
     }
-
-    Router.push("/");
   };
 
   const handleSignInWithPassword = async () => {
@@ -57,8 +48,6 @@ const Auth = () => {
       setError(error.message);
       return;
     }
-
-    Router.push("/");
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -83,30 +72,31 @@ const Auth = () => {
       setError(error.message);
       return;
     }
-
-    Router.push("/");
   };
 
   const signInWithFacebook = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: "http://localhost:3000",
-      },
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: "http://localhost:3000",
+        },
+      });
 
-    if (error) {
-      setError(error.message);
-      return;
+      if (error) {
+        setError(error.message);
+        return;
+      }
+    } catch (error) {
+      console.log(error);
     }
-    Router.push("/");
   };
 
   // const signInWithTwitter = async () => {
   //   const { user } = await signInWithPopup(auth, twitterAuthProvider);
 
   //   setUser(user);
-  //   Router.push("/");
+  //
   // };
 
   return (

@@ -1,28 +1,33 @@
 import Head from "next/head";
 import Header from "../components/Header";
-import { useContext, useEffect } from "react";
-import Links from "../components/Links";
-import { ThemeContext } from "../provider/ThemeProvider";
-import { useUser } from "@supabase/auth-helpers-react";
+import { useEffect } from "react";
+import Links from "../components/Bookmarks/Bookmarks";
+import { useThemeContext } from "../provider/ThemeProvider";
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import Router from "next/router";
 
 export default function Home() {
-  // useContext
+  const { theme } = useThemeContext();
+
+  const supabase = useSupabaseClient();
+
   const user = useUser();
-  const { theme, setTheme } = useContext(ThemeContext);
 
-  // useEffect
   useEffect(() => {
-    const localStorageTheme = localStorage.getItem("theme");
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (localStorageTheme) {
-      setTheme(localStorageTheme);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    if (!user) {
-      Router.push("/auth");
-    }
-  }, []);
+      if (!user) {
+        Router.push("/auth");
+      }
+    };
+
+    getUser();
+  }, [supabase.auth, user]);
+
+  if (!user) return null;
 
   return (
     <div className={theme}>

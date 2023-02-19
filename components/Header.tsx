@@ -1,24 +1,17 @@
-import { getAuth } from "firebase/auth";
 import Router from "next/router";
-import { useContext, useEffect, useRef, useState } from "react";
-import { firebaseApp } from "../firebase/firebase";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { UserContext } from "../provider/UserProvider";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import { useAutocomplete } from "@mui/material";
-import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
-import { firebaseDB } from "../firebase/firebase";
 
 import { formatAMPM, monthNumToStr, weekdayNumToStr } from "../helper/helper";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import useOutside from "../helper/hooks/useOutside";
 
 import Location from "../types/location.type";
 import TemperatureDegree from "./header/TemperatureDegree";
 import Tooltip from "./utils/Tooltip";
-
-const auth = getAuth(firebaseApp);
 
 const timeOptions: Intl.DateTimeFormatOptions = {
   hour12: false,
@@ -29,9 +22,10 @@ const timeOptions: Intl.DateTimeFormatOptions = {
 const Header = () => {
   // Supabase client hook
   const supabase = useSupabaseClient();
+  const user = useUser();
 
   // useContext
-  const { user, setUser } = useContext(UserContext);
+
   const { theme, setTheme } = useThemeContext();
 
   // useState
@@ -44,7 +38,9 @@ const Header = () => {
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
   const [options, setOptions] = useState<Array<Location>>([]);
   const [location, setLocation] = useState<Location | null>(
-    JSON.parse(localStorage.getItem("location")!!) || null
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("location")!!)
+      : null
   );
   const [showChangeLocation, setShowChangeLocation] = useState(!location);
 
@@ -66,28 +62,30 @@ const Header = () => {
       if (value) {
         setShowChangeLocation(false);
         setLocation(value);
-        try {
-          localStorage.setItem("location", JSON.stringify(value));
-          await updateDoc(doc(firebaseDB, "user_info", user?.uid!!), {
-            location: {
-              city: value.city,
-              country: value.country,
-              lat: value.lat,
-              lng: value.lng,
-            },
-          });
-        } catch (error: any) {
-          if (error.code === "not-found") {
-            await setDoc(doc(firebaseDB, "user_info", user?.uid!!), {
+
+        localStorage.setItem("location", JSON.stringify(value));
+        const { data, error } = await supabase.from("user_info").upsert({
+          user_id: user?.id,
+          location: {
+            city: value.city,
+            country: value.country,
+            lat: value.lat,
+            lng: value.lng,
+          },
+        });
+
+        if (error) {
+          await supabase
+            .from("user_info")
+            .update({
               location: {
                 city: value.city,
                 country: value.country,
                 lat: value.lat,
                 lng: value.lng,
               },
-            });
-          }
-          console.error(error);
+            })
+            .eq("user_id", user?.id);
         }
       } else {
         setShowChangeLocation(true);
@@ -95,7 +93,7 @@ const Header = () => {
     },
     onInputChange: async (e: any) => {
       const { data } = await supabase
-        .from("cities")
+        .from("city")
         .select("city, country, lat, lng")
         .ilike("city", `${e.target.value}%`)
         .limit(5);
@@ -123,11 +121,21 @@ const Header = () => {
     }, 1000);
 
     // Get user location
+
+    if (!user) return;
+
+    console.log(user);
     (async () => {
       try {
-        const docRef = doc(firebaseDB, "user_info", user?.uid!!);
-        const docSnap = await getDoc(docRef);
-        const data = docSnap.data();
+        const { data, error } = await supabase
+          .from("user_info")
+          .select("location")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) {
+          console.error(error);
+        }
 
         if (data?.location) {
           setLocation(data.location);
@@ -142,7 +150,7 @@ const Header = () => {
     })();
 
     return () => clearInterval(interval);
-  }, [user?.uid]);
+  }, [supabase, user, user?.id]);
 
   useEffect(() => {
     if (location) {
@@ -164,8 +172,12 @@ const Header = () => {
 
   // functions
   const signOut = async () => {
-    await auth.signOut();
-    setUser(null);
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error(error);
+    }
+
     Router.push("/auth");
   };
 
@@ -244,13 +256,17 @@ const Header = () => {
           )}
         </div>
         <div className="content-center grid">
-          <p>{user?.displayName || user?.email}</p>
+          <p>{user?.email || user?.email}</p>
         </div>
         <div className="content-center grid">
           <div className="w-8 h-8">
             <Image
               className="rounded-full"
-              src={user?.photoURL || "/assets/user.jpeg"}
+              src={
+                user?.user_metadata.avatar_url ||
+                user?.user_metadata.picture ||
+                "/assets/user.jpeg"
+              }
               width={32}
               height={32}
               alt={"user photo"}

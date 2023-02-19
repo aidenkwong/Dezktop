@@ -7,14 +7,14 @@ type FormData = {
   url: string;
 };
 
-export default function AddLinkForm({
-  showAddLinkForm,
+const AddBookmarkForm = ({
+  setShowAddBookmarkForm,
+  showAddBookmarkForm,
   children,
-  setShowAddLinkForm,
-  allLinks,
-  setAllLinks,
+  allBookmarks,
+  setAllBookmarks,
   directory,
-}: any) {
+}: any) => {
   // useState
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -22,7 +22,7 @@ export default function AddLinkForm({
     url: "",
   });
 
-  if (!showAddLinkForm) return null;
+  if (!showAddBookmarkForm) return null;
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ export default function AddLinkForm({
     if (formData.name.length === 0) return;
 
     const dateAdded = (Date.now() - Date.UTC(1601, 0, 1)) * 1000;
-    const addedLink =
+    const addedBookmark =
       formData.type === "folder"
         ? {
             name: formData.name,
@@ -47,7 +47,7 @@ export default function AddLinkForm({
             date_added: dateAdded,
           };
 
-    let tmpAllLinks = [...allLinks];
+    let tmpAllBookmarks = [...allBookmarks];
 
     // Traverse the tree to find the correct directory
     const dfs = (arr: any[], key: string, depth: number) => {
@@ -60,9 +60,9 @@ export default function AddLinkForm({
       if (keyArr.length - curDirArr.length === 1) {
         let duplicateCount = 0;
 
-        for (const link of arr) {
-          const duplicate = link.name === addedLink.name;
-          const duplicateWithNumber = link.name
+        for (const bookmark of arr) {
+          const duplicate = bookmark.name === addedBookmark.name;
+          const duplicateWithNumber = bookmark.name
             .match(/\((\d+)\)/)
             ?.input.slice(0, -3);
 
@@ -70,11 +70,11 @@ export default function AddLinkForm({
             duplicateCount++;
           }
         }
-        addedLink.name =
+        addedBookmark.name =
           duplicateCount == 0
-            ? addedLink.name
-            : `${addedLink.name} (${duplicateCount})`;
-        arr.push(addedLink);
+            ? addedBookmark.name
+            : `${addedBookmark.name} (${duplicateCount})`;
+        arr.push(addedBookmark);
         arr.sort((a, b) => {
           return a.type.localeCompare(b.type);
         });
@@ -92,11 +92,12 @@ export default function AddLinkForm({
       }
     };
 
-    dfs(tmpAllLinks[0].children, directory + "/" + addedLink.name, 0);
+    dfs(tmpAllBookmarks[0].children, directory + "/" + addedBookmark.name, 0);
 
-    setAllLinks(tmpAllLinks);
+    console.log(tmpAllBookmarks);
+    setAllBookmarks(tmpAllBookmarks);
     setFormData({ name: "", type: "url", url: "" });
-    setShowAddLinkForm(false);
+    setShowAddBookmarkForm(false);
   };
 
   return ReactDom.createPortal(
@@ -158,8 +159,9 @@ export default function AddLinkForm({
           )}
           <div className="flex">
             <button
+              type="button"
               className="border-2 border-foreground w-20 py-2 mr-2 rounded"
-              onClick={() => setShowAddLinkForm(false)}
+              onClick={() => setShowAddBookmarkForm(false)}
             >
               Cancel
             </button>
@@ -176,4 +178,6 @@ export default function AddLinkForm({
     </>,
     document.getElementById("portal")!!
   );
-}
+};
+
+export default AddBookmarkForm;
