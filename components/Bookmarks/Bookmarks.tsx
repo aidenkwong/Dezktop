@@ -1,108 +1,113 @@
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
+import { useEffect, useRef, useState } from "react";
 import { MdAddCircleOutline } from "react-icons/md";
-import { firebaseDB } from "../firebase/firebase";
-import { UserContext } from "../provider/UserProvider";
-import AddLinkForm from "./AddLinkForm";
-import Link from "./Link";
-import ImportBookmarkInstruction from "./Links/ImportBookmarkInstruction";
 
-const Links = () => {
+import AddbookmarkForm from "./AddBookmarkForm";
+import Bookmark from "./Bookmark";
+import ImportBookmarkInstruction from "./ImportBookmarkInstruction";
+
+const Bookmarks = () => {
+  const supabase = useSupabaseClient();
+  const user = useUser();
+
   // useState
   const [loading, setLoading] = useState(false);
 
-  const [links, setLinks] = useState<Array<any>>([]);
+  const [bookmarks, setBookmarks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
-  const [showAddLinkForm, setShowAddLinkForm] = useState(false);
+  const [showAddBookmarkForm, setShowAddBookmarkForm] = useState(false);
 
   // useRef
-  const linksRef = useRef<Array<HTMLDivElement | null>>([]);
+  const bookmarksRef = useRef<Array<HTMLDivElement | null>>([]);
   const directoryRef = useRef<Array<HTMLButtonElement | null>>([]);
 
   // useContext
-  const { user } = useContext(UserContext);
 
-  const [allLinks, setAllLinks] = useState<Array<any>>(
-    JSON.parse(localStorage.getItem(`${user?.uid}_links`)!!) || [
-      {
-        name: "My Bookmarks",
-        type: "folder",
-        children: [],
-      },
-    ]
+  const [allBookmarks, setAllBookmarks] = useState<Array<any>>(
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem(`${user?.id}_bookmarks`)!!) || [
+          {
+            name: "My Bookmarks",
+            type: "folder",
+            children: [],
+          },
+        ]
+      : [
+          {
+            name: "My Bookmarks",
+            type: "folder",
+            children: [],
+          },
+        ]
   );
 
   // useEffect
   useEffect(() => {
-    (async () => {
-      try {
-        const docRef = doc(firebaseDB, "link", user?.uid!!);
-        const docSnap = await getDoc(docRef);
-        const data = docSnap.data();
+    if (!user?.id) return;
 
-        if (data) {
-          setAllLinks([
-            {
-              name: "My Bookmarks",
-              type: "folder",
-              children: data.bookmarks,
-            },
-          ]);
-        } else {
-          setAllLinks([
-            {
-              name: "My Bookmarks",
-              type: "folder",
-              children: [],
-            },
-          ]);
-        }
-      } catch (error) {
+    const fetchBookmarks = async () => {
+      const { data, error } = await supabase
+        .from("bookmark")
+        .select("bookmark")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) {
         console.error(error);
+        return;
+      }
+
+      if (data) {
+        setAllBookmarks(data.bookmark);
+      } else {
+        setAllBookmarks([
+          {
+            name: "My Bookmarks",
+            type: "folder",
+            children: [],
+          },
+        ]);
+      }
+    };
+
+    fetchBookmarks();
+  }, [supabase, user]);
+
+  // Update Bookmark
+  useEffect(() => {
+    if (!user?.id || !allBookmarks) return;
+
+    setLoading(true);
+
+    (async () => {
+      localStorage.setItem(
+        `${user.id}_bookmarks`,
+        JSON.stringify(allBookmarks)
+      );
+      const { error } = await supabase
+        .from("bookmark")
+        .upsert({ user_id: user.id, bookmark: allBookmarks });
+
+      if (error) {
+        const { error: error2 } = await supabase
+          .from("bookmark")
+          .update({ bookmark: allBookmarks })
+          .eq("user_id", user.id);
+
+        if (error2) {
+          console.error(error2);
+        }
       }
     })();
-  }, [user]);
 
-  useEffect(() => {
-    setLoading(true);
-    if (allLinks && user?.uid) {
-      (async () => {
-        localStorage.setItem(`${user.uid}_links`, JSON.stringify(allLinks));
-        try {
-          await updateDoc(doc(firebaseDB, "link", user?.uid!!), {
-            bookmarks: allLinks[0].children,
-          });
-        } catch (error: any) {
-          if (error.code === "not-found") {
-            await setDoc(doc(firebaseDB, "link", user?.uid!!), {
-              bookmarks: allLinks[0].children,
-            });
-          }
-          console.error(error);
-        }
-      })();
-    }
     setLoading(false);
-  }, [allLinks, user?.uid]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allBookmarks]);
 
   useEffect(() => {
-    setLinks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type)));
-  }, [links]);
-
-  // useEffect(() => {
-  //   let tmpLinks = allLinks;
-  //   const directoryArr = directory.split("/");
-
-  //   for (let i = 0; i < directoryArr.length; i++) {
-  //     const idx = tmpLinks.findIndex(
-  //       (link) => link.name === directoryArr[i] && link.type === "folder"
-  //     );
-
-  //     if (idx === -1) return;
-  //     tmpLinks = tmpLinks[idx].children;
-  //   }
-  //   setLinks(tmpLinks);
-  // }, [allLinks, directory]);
+    setBookmarks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type)));
+  }, [bookmarks]);
 
   // add event listeners and refs
   useEffect(() => {
@@ -182,13 +187,13 @@ const Links = () => {
 
       if (dropKey === directory) return;
 
-      const movedLink = links.find(
-        (link) =>
-          link.name ===
+      const movedbookmark = bookmarks.find(
+        (bookmark) =>
+          bookmark.name ===
           dragStartKey.split("/")[dragStartKey.split("/").length - 1]
       );
 
-      let tmpAllLinks = allLinks;
+      let tmpAllBookmarks = allBookmarks;
 
       const dfs = (
         arr: any[],
@@ -210,9 +215,9 @@ const Links = () => {
         if (curDirArr.join("/") === dropKeyArr.join("/")) {
           let duplicateCount = 0;
 
-          for (const link of arr) {
-            const duplicate = link.name === movedLink.name;
-            const duplicateWithNumber = link.name
+          for (const bookmark of arr) {
+            const duplicate = bookmark.name === movedbookmark.name;
+            const duplicateWithNumber = bookmark.name
               .match(/\((\d+)\)/)
               ?.input.slice(0, -3);
 
@@ -220,14 +225,15 @@ const Links = () => {
               duplicateCount++;
             }
           }
-          movedLink.name =
-            movedLink.name + `${duplicateCount > 0 && `(${duplicateCount})`}}`;
+          movedbookmark.name =
+            movedbookmark.name +
+            `${duplicateCount > 0 && `(${duplicateCount})`}}`;
 
-          arr.push(movedLink);
+          arr.push(movedbookmark);
           arr.sort((a, b) => {
             return a.type.localeCompare(b.type);
           });
-          setLinks(arr);
+          setBookmarks(arr);
         }
 
         if (startKeyArr.length - curDirArr.length === 1) {
@@ -256,44 +262,45 @@ const Links = () => {
         }
       };
 
-      dfs(tmpAllLinks[0].children, dragStartKey, dropKey, 0);
+      dfs(tmpAllBookmarks[0].children, dragStartKey, dropKey, 0);
 
-      setAllLinks([...tmpAllLinks]);
+      setAllBookmarks([...tmpAllBookmarks]);
     };
     // End of event listener functions for DND API
 
-    // Set the links in current directory
-    let tmpLinks = [...allLinks];
+    // Set the bookmarks in current directory
+    let tmpbookmarks = [...allBookmarks];
     const directoryArr = directory.split("/");
 
     for (let i = 0; i < directoryArr.length; i++) {
-      const idx = tmpLinks.findIndex(
-        (link) => link.name === directoryArr[i] && link.type === "folder"
+      const idx = tmpbookmarks.findIndex(
+        (bookmark) =>
+          bookmark.name === directoryArr[i] && bookmark.type === "folder"
       );
 
       if (idx === -1) return;
-      tmpLinks = tmpLinks[idx].children;
+      tmpbookmarks = tmpbookmarks[idx].children;
     }
-    tmpLinks.sort((a, b) => {
+    tmpbookmarks.sort((a, b) => {
       return a.type.localeCompare(b.type);
     });
-    setLinks(tmpLinks);
+    setBookmarks(tmpbookmarks);
 
-    // Populate the refs to links
-    linksRef.current = linksRef?.current?.slice(0, links.length);
+    // Populate the refs to bookmarks
+    bookmarksRef.current = bookmarksRef?.current?.slice(0, bookmarks.length);
 
-    // Add event listeners to link nodes
-    for (let i = 0; i < links.length; i++) {
-      if (links[i].type === "url") {
-        linksRef.current[i]?.addEventListener("dragstart", handleDragStart);
-        linksRef.current[i]?.addEventListener("dragend", handleDragEnd);
+    // Add event listeners to bookmark nodes
+    for (let i = 0; i < bookmarks.length; i++) {
+      if (bookmarks[i].type === "url") {
+        bookmarksRef.current[i]?.addEventListener("dragstart", handleDragStart);
+        bookmarksRef.current[i]?.addEventListener("dragend", handleDragEnd);
       }
-      if (links[i].type === "folder") {
-        linksRef.current[i]?.addEventListener("dragleave", handleDragLeave);
-        linksRef.current[i]?.addEventListener("drop", handleDrop);
+      if (bookmarks[i].type === "folder") {
+        bookmarksRef.current[i]?.addEventListener("dragleave", handleDragLeave);
+        bookmarksRef.current[i]?.addEventListener("drop", handleDrop);
       }
 
-      linksRef.current[i]?.addEventListener("dragover", handleDragOver);
+      bookmarksRef.current[i]?.addEventListener("dragover", handleDragOver);
     }
 
     // Populate the refs to directories
@@ -308,23 +315,29 @@ const Links = () => {
 
     // Remove event listeners when unmounting
     return () => {
-      for (let i = 0; i < links.length; i++) {
-        if (links[i].type === "url") {
-          linksRef.current[i]?.removeEventListener(
+      for (let i = 0; i < bookmarks.length; i++) {
+        if (bookmarks[i].type === "url") {
+          bookmarksRef.current[i]?.removeEventListener(
             "dragstart",
             handleDragStart
           );
-          linksRef.current[i]?.removeEventListener("dragend", handleDragEnd);
+          bookmarksRef.current[i]?.removeEventListener(
+            "dragend",
+            handleDragEnd
+          );
         }
-        if (links[i].type === "folder") {
-          linksRef.current[i]?.removeEventListener(
+        if (bookmarks[i].type === "folder") {
+          bookmarksRef.current[i]?.removeEventListener(
             "dragleave",
             handleDragLeave
           );
-          linksRef.current[i]?.removeEventListener("drop", handleDrop);
+          bookmarksRef.current[i]?.removeEventListener("drop", handleDrop);
         }
 
-        linksRef.current[i]?.removeEventListener("dragover", handleDragOver);
+        bookmarksRef.current[i]?.removeEventListener(
+          "dragover",
+          handleDragOver
+        );
       }
       for (let i = 0; i < directory.length; i++) {
         directoryRef.current[i]?.removeEventListener(
@@ -338,11 +351,11 @@ const Links = () => {
         directoryRef.current[i]?.removeEventListener("drop", handleDrop);
       }
     };
-  }, [allLinks, directory, links]);
+  }, [allBookmarks, directory, bookmarks]);
 
   // functions
-  const deleteLink = async (key: string) => {
-    let tmpAllLinks = [...allLinks];
+  const deleteBookmark = async (key: string) => {
+    let tmpAllBookmarks = [...allBookmarks];
     const dfs = (arr: any[], key: string, depth: number) => {
       const keyArr = key.split("/");
       let curDirArr: string[] = [];
@@ -369,9 +382,9 @@ const Links = () => {
       }
     };
 
-    dfs(tmpAllLinks[0].children, key, 0);
+    dfs(tmpAllBookmarks[0].children, key, 0);
 
-    setAllLinks(tmpAllLinks);
+    setAllBookmarks(tmpAllBookmarks);
   };
 
   // Emit when user upload "Bookmarks" file
@@ -379,7 +392,7 @@ const Links = () => {
     const file = e.target.files[0];
     const fileJson = JSON.parse(await file.text());
 
-    setAllLinks([
+    setAllBookmarks([
       {
         name: "My Bookmarks",
         children: fileJson.roots.bookmark_bar.children,
@@ -424,37 +437,37 @@ const Links = () => {
               ))}
             </div>
           </div>
-          {links.map((link: any, index) => (
-            <Link
-              linksRef={linksRef}
+          {bookmarks.map((bookmark: any, index) => (
+            <Bookmark
+              bookmarksRef={bookmarksRef}
               directory={directory}
               setDirectory={setDirectory}
               key={index}
-              dataKey={directory + "/" + link.name}
-              name={link.name}
-              type={link.type}
-              url={link.url}
-              deleteLink={deleteLink}
+              dataKey={directory + "/" + bookmark.name}
+              name={bookmark.name}
+              type={bookmark.type}
+              url={bookmark.url}
+              deleteBookmark={deleteBookmark}
               loading={loading}
               index={index}
-              setLinks={setLinks}
+              setBookmarks={setBookmarks}
             />
           ))}
           <div
             onClick={() => {
-              setShowAddLinkForm(true);
+              setShowAddBookmarkForm(true);
             }}
             className="h-32 gap-1 w-full bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
           >
             Add shortcut or folder
             <MdAddCircleOutline size={24} />
           </div>
-          <AddLinkForm
-            setShowAddLinkForm={setShowAddLinkForm}
-            showAddLinkForm={showAddLinkForm}
-            links={links}
-            allLinks={allLinks}
-            setAllLinks={setAllLinks}
+          <AddbookmarkForm
+            setShowAddBookmarkForm={setShowAddBookmarkForm}
+            showAddBookmarkForm={showAddBookmarkForm}
+            bookmarks={bookmarks}
+            allBookmarks={allBookmarks}
+            setAllBookmarks={setAllBookmarks}
             directory={directory}
           />
         </div>
@@ -468,4 +481,4 @@ const Links = () => {
   );
 };
 
-export default Links;
+export default Bookmarks;

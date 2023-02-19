@@ -1,18 +1,18 @@
 import { MdFolderOpen } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
-import useOutside from "../helper/hooks/useOutside";
+import useOutside from "../../helper/hooks/useOutside";
 // import Image from "next/image";
 
-const Link = ({
+const Bookmark = ({
   name,
   url,
   type,
   directory,
   setDirectory,
-  linksRef,
+  bookmarksRef,
   loading,
   index,
-  deleteLink,
+  deleteBookmark,
 }: any) => {
   // useState
   const [showMenu, setShowMenu] = useState(false);
@@ -36,7 +36,7 @@ const Link = ({
     <>
       <a
         data-key={directory + "/" + name}
-        ref={(el) => (linksRef.current[index] = el)}
+        ref={(el) => (bookmarksRef.current[index] = el)}
         onClick={() => {
           if (type === "folder") {
             setDirectory((prev: string) => prev + "/" + name);
@@ -102,11 +102,11 @@ const Link = ({
         >
           <button
             onClick={() => {
-              deleteLink(directory + "/" + name);
+              deleteBookmark(directory + "/" + name);
               setShowMenu(false);
             }}
           >
-            Delete Link
+            Delete Bookmark
           </button>
         </div>
       )}
@@ -114,4 +114,4 @@ const Link = ({
   );
 };
 
-export default Link;
+export default Bookmark;
