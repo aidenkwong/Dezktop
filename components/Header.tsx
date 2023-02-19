@@ -64,7 +64,7 @@ const Header = () => {
         setLocation(value);
 
         localStorage.setItem("location", JSON.stringify(value));
-        const { data, error } = await supabase.from("user_info").upsert({
+        const { error } = await supabase.from("user_info").upsert({
           user_id: user?.id,
           location: {
             city: value.city,

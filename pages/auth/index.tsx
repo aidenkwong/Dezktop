@@ -1,4 +1,3 @@
-import Router from "next/router";
 import { useState, FormEvent, useEffect } from "react";
 import { ImGoogle, ImFacebook } from "react-icons/im";
 import { useThemeContext } from "../../provider/ThemeProvider";
@@ -27,7 +26,7 @@ const Auth = () => {
 
   // functions
   const handleSignUpWithPassword = async () => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
     });
@@ -39,7 +38,7 @@ const Auth = () => {
   };
 
   const handleSignInWithPassword = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -61,7 +60,7 @@ const Auth = () => {
   };
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: "http://localhost:3000",
@@ -76,7 +75,7 @@ const Auth = () => {
 
   const signInWithFacebook = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: {
           redirectTo: "http://localhost:3000",
