@@ -41,10 +41,10 @@ const Bookmarks = () => {
         ]
   );
 
-  // useEffect
   useEffect(() => {
     if (!user?.id) return;
 
+    // Fetch bookmarks from supabase
     const fetchBookmarks = async () => {
       const { data, error } = await supabase
         .from("bookmark")
@@ -73,12 +73,12 @@ const Bookmarks = () => {
     fetchBookmarks();
   }, [supabase, user]);
 
-  // Update Bookmark
   useEffect(() => {
     if (!user?.id || !allBookmarks) return;
 
     setLoading(true);
 
+    // Update bookmarks in supabase
     (async () => {
       localStorage.setItem(
         `${user.id}_bookmarks`,
@@ -101,11 +101,10 @@ const Bookmarks = () => {
     })();
 
     setLoading(false);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allBookmarks]);
+  }, [allBookmarks, supabase, user?.id]);
 
   useEffect(() => {
+    // Reorder the bookmarks in current directory
     setBookmarks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type)));
   }, [bookmarks]);
 
@@ -113,7 +112,7 @@ const Bookmarks = () => {
   useEffect(() => {
     let dragStartKey: string;
 
-    // Start of event listener functions for DND API
+    // Start of event listener functions for drag-and-drop api
     const handleDragStart = (e: any) => {
       const el = e.currentTarget;
 
@@ -226,8 +225,9 @@ const Bookmarks = () => {
             }
           }
           movedbookmark.name =
-            movedbookmark.name +
-            `${duplicateCount > 0 && `(${duplicateCount})`}}`;
+            duplicateCount == 0
+              ? movedbookmark.name
+              : `${movedbookmark.name} (${duplicateCount})`;
 
           arr.push(movedbookmark);
           arr.sort((a, b) => {
