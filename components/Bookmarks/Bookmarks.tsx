@@ -456,7 +456,7 @@ const Bookmarks = () => {
               onClick={() => {
                 setShowAddBookmarkForm(true);
               }}
-              className="w-fit h-fit p-4 bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
+              className="w-fit p-4 bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
             >
               Add shortcut or folder
               <MdAddCircleOutline size={24} />
