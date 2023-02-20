@@ -21,8 +21,11 @@ module.exports = {
       },
     },
     gridTemplateColumns: {
-      "auto-224": "repeat(auto-fit, 224px)",
+      "auto-180": "repeat(auto-fit, minmax(180px, 1fr))",
     },
   },
-  plugins: [require("@shrutibalasa/tailwind-grid-auto-fit")],
+  plugins: [
+    require("@shrutibalasa/tailwind-grid-auto-fit"),
+    require("@tailwindcss/line-clamp"),
+  ],
 };

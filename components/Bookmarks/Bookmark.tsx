@@ -56,7 +56,7 @@ const Bookmark = ({
           return false;
         }}
         rel="noreferrer"
-        className={`flex gap-2 h-32 w-full p-2 text-content rounded cursor-pointer transition-all ease-in-out duration-300 ${
+        className={`flex gap-2 p-2 text-content rounded cursor-pointer transition-all ease-in-out duration-300 ${
           type === "url"
             ? "bg-foreground2 hover:bg-foreground2Hover"
             : "folder bg-foreground border-2 border-foreground2"
@@ -87,7 +87,9 @@ const Bookmark = ({
               }
             </div>
           )}
-          <div className="w-fit"> {name}</div>
+          <p className="w-fit h-fit line-clamp-3 ">
+            {name.replace(/(\r\n|\n|\r)/gm, "")}
+          </p>
         </div>
       </a>
       {showMenu && ( // Menu when left click
