@@ -1,17 +1,21 @@
 import Router from "next/router";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useThemeContext } from "../provider/ThemeProvider";
+import { useThemeContext } from "../../provider/ThemeProvider";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import { useAutocomplete } from "@mui/material";
 
-import { formatAMPM, monthNumToStr, weekdayNumToStr } from "../helper/helper";
+import {
+  formatAMPM,
+  monthNumToStr,
+  weekdayNumToStr,
+} from "../../helper/helper";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
-import useOutside from "../helper/hooks/useOutside";
+import useOutside from "../../helper/hooks/useOutside";
 
-import Location from "../types/location.type";
-import TemperatureDegree from "./header/TemperatureDegree";
-import Tooltip from "./utils/Tooltip";
+import Location from "../../types/location.type";
+import TemperatureDegree from "./TemperatureDegree";
+import Tooltip from "../utils/Tooltip";
 
 const timeOptions: Intl.DateTimeFormatOptions = {
   hour12: false,

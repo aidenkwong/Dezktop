@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Header from "../components/Header";
+import Header from "../components/Header/Header";
 import { useEffect } from "react";
 import Bookmarks from "../components/Bookmarks/Bookmarks";
 import { useThemeContext } from "../provider/ThemeProvider";
