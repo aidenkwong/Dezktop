@@ -4,25 +4,41 @@ import { MdAddCircleOutline } from "react-icons/md";
 
 import AddbookmarkForm from "./AddBookmarkForm";
 import Bookmark from "./Bookmark";
+import Directory from "./Directory";
 import ImportBookmarkInstruction from "./ImportBookmarkInstruction";
 
+/*
+Component Flow:
+1. Get bookmarks from local storage
+2. Fetch bookmarks from Supabase
+    When bookmarks are updated:
+    1. Update bookmarks in local storage
+    2. Update bookmarks in Supabase
+
+P.S.
+Bookmark is in form of JSON:
+{
+    name: "My Bookmarks",
+    type: "folder",
+    children: [
+    ]
+}
+Currently, updating any bookmark will update the whole 'bookmarks' object.
+*/
+
 const Bookmarks = () => {
-  const supabase = useSupabaseClient();
-  const user = useUser();
+  const supabase = useSupabaseClient(); // Supabase Client Hook
+  const user = useUser(); // Supbase User Hook
 
-  const [loading, setLoading] = useState(false);
-  const [bookmarks, setBookmarks] = useState<Array<any>>([]);
-  const [directory, setDirectory] = useState<string>("My Bookmarks");
-  const [showAddBookmarkForm, setShowAddBookmarkForm] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading State for Updating Bookmarks
+  const [bookmarks, setBookmarks] = useState<Array<any>>([]); // Bookmarks State
+  const [directory, setDirectory] = useState<string>("My Bookmarks"); // Directory State
+  const [showAddBookmarkForm, setShowAddBookmarkForm] = useState(false); // Show Add Bookmark Form State
 
-  // useRef
-  const bookmarksContainerRef = useRef<HTMLDivElement | null>(null);
-  const bookmarksRef = useRef<Array<HTMLDivElement | null>>([]);
-  const directoryRef = useRef<Array<HTMLButtonElement | null>>([]);
-
-  // useContext
-
-  const [allBookmarks, setAllBookmarks] = useState<Array<any>>(
+  const bookmarksRef = useRef<Array<HTMLDivElement | null>>([]); // Nodes for Bookmarks
+  const directoryRef = useRef<Array<HTMLButtonElement | null>>([]); // Nodes for Directories
+  const [allBookmarks, setAllBookmarks] = useState<Array<any>>( // All Bookmarks State
+    // Getting bookmarks from local storage
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem(`${user?.id}_bookmarks`)!!) || [
           {
@@ -41,9 +57,9 @@ const Bookmarks = () => {
   );
 
   useEffect(() => {
-    if (!user?.id) return;
-    // Fetch bookmarks from supabase
+    if (!user?.id) return; // Avoid errors when user is not logged in
     const fetchBookmarks = async () => {
+      // Fetch bookmarks from Supbase
       const { data, error } = await supabase
         .from("bookmark")
         .select("bookmark")
@@ -72,17 +88,16 @@ const Bookmarks = () => {
   }, [supabase, user]);
 
   useEffect(() => {
-    if (!user?.id || !allBookmarks) return;
-
+    if (!user?.id || !allBookmarks) return; // Avoid errors when user is not logged in or allBookmarks is not set
     setLoading(true);
-
-    // Update bookmarks in supabase
-    (async () => {
+    const updateBookmarks = async () => {
+      // Update bookmarks
       localStorage.setItem(
+        // Update bookmarks in local storage
         `${user.id}_bookmarks`,
         JSON.stringify(allBookmarks)
       );
-      const { error } = await supabase
+      const { error } = await supabase // Update bookmarks in Supabase
         .from("bookmark")
         .upsert({ user_id: user.id, bookmark: allBookmarks });
 
@@ -96,21 +111,22 @@ const Bookmarks = () => {
           console.error(error2);
         }
       }
-    })();
+    };
 
+    updateBookmarks();
     setLoading(false);
   }, [allBookmarks, supabase, user?.id]);
 
   useEffect(() => {
-    // Reorder the bookmarks in current directory
-    setBookmarks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type)));
+    setBookmarks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type))); // Reorder the bookmarks in current directory
   }, [bookmarks]);
 
-  // add event listeners and refs
   useEffect(() => {
     let dragStartKey: string;
 
-    // Start of event listener functions for drag-and-drop api
+    /*
+    The following functions are the event handlers for drag and drop.
+    */
     const handleDragStart = (e: any) => {
       const el = e.currentTarget;
 
@@ -119,7 +135,6 @@ const Bookmarks = () => {
 
       crt.setAttribute("id", "crt");
       crt.classList = "";
-      // classList for the dragging element
       crt.classList.add(
         "w-44",
         "h-fit",
@@ -130,7 +145,7 @@ const Bookmarks = () => {
         "-top-64",
         "-left-64",
         "rounded"
-      );
+      ); // Styling for the drag node
       document.body.appendChild(crt);
       e.dataTransfer.setDragImage(crt, 0, 0);
     };
@@ -149,7 +164,6 @@ const Bookmarks = () => {
 
       if (el.classList.contains("directory")) {
         el.classList.replace("border-edge", "border-transparent");
-        // effect removed
       }
     };
 
@@ -165,7 +179,6 @@ const Bookmarks = () => {
         el.getAttribute("data-key") !== directory
       ) {
         el.classList.replace("border-transparent", "border-edge");
-        // effect removed
       }
     };
 
@@ -179,7 +192,6 @@ const Bookmarks = () => {
       }
       if (el.classList.contains("directory")) {
         el.classList.replace("border-edge", "border-transparent");
-        // effect removed
       }
 
       if (dropKey === directory) return;
@@ -192,6 +204,9 @@ const Bookmarks = () => {
 
       let tmpAllBookmarks = allBookmarks;
 
+      /*
+      Funnction for Traversing the bookmarks object to remove the dragged bookmark from the old directory and add it to the new directory
+      */
       const dfs = (
         arr: any[],
         startKey: string,
@@ -264,9 +279,7 @@ const Bookmarks = () => {
 
       setAllBookmarks([...tmpAllBookmarks]);
     };
-    // End of event listener functions for DND API
 
-    // Set the bookmarks in current directory
     let tmpbookmarks = [...allBookmarks];
     const directoryArr = directory.split("/");
 
@@ -402,74 +415,54 @@ const Bookmarks = () => {
   return (
     <>
       <div className="hover:resize rounded border border-neutral-500 p-2 my-2 overflow-auto min-w-[196px]">
-        <div className="my-2" ref={bookmarksContainerRef}>
-          <div className="grid gap-2 grid-cols-auto-180">
-            <div className="col-span-full flex justify-between">
-              <div>
-                {directory.split("/").map((dir, index) => (
-                  <span key={index} className="my-2">
-                    {index !== 0 && <i className="text-content">{"  >  "}</i>}
-                    <button
-                      className={`directory ${
-                        index !== directory.split("/").length - 1 &&
-                        "hover:bg-foreground2Hover"
-                      }  px-3 py-1 rounded-full bg-foreground2 text-content border-2 border-transparent`}
-                      data-key={directory
-                        .split("/")
-                        .slice(0, index + 1)
-                        .join("/")}
-                      ref={(el) => (directoryRef.current[index] = el)}
-                      key={index}
-                      onClick={() =>
-                        setDirectory(
-                          directory
-                            .split("/")
-                            .slice(0, index + 1)
-                            .join("/")
-                        )
-                      }
-                      disabled={index === directory.split("/").length - 1}
-                    >
-                      {dir}
-                    </button>
-                  </span>
-                ))}
-              </div>
+        <div className="grid gap-2 grid-cols-auto-180">
+          <div className="col-span-full flex justify-between">
+            <div className="flex gap-2">
+              {directory.split("/").map((dir, index) => (
+                <Directory
+                  key={index}
+                  dir={dir}
+                  index={index}
+                  directory={directory}
+                  setDirectory={setDirectory}
+                  directoryRef={directoryRef}
+                />
+              ))}
             </div>
-            {bookmarks.map((bookmark: any, index) => (
-              <Bookmark
-                bookmarksRef={bookmarksRef}
-                directory={directory}
-                setDirectory={setDirectory}
-                key={index}
-                dataKey={directory + "/" + bookmark.name}
-                name={bookmark.name}
-                type={bookmark.type}
-                url={bookmark.url}
-                deleteBookmark={deleteBookmark}
-                loading={loading}
-                index={index}
-                setBookmarks={setBookmarks}
-              />
-            ))}
-            <div
-              onClick={() => {
-                setShowAddBookmarkForm(true);
-              }}
-              className="w-fit p-4 bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
-            >
-              Add shortcut or folder
-              <MdAddCircleOutline size={24} />
-            </div>
-            <AddbookmarkForm
-              setShowAddBookmarkForm={setShowAddBookmarkForm}
-              showAddBookmarkForm={showAddBookmarkForm}
-              bookmarks={bookmarks}
-              allBookmarks={allBookmarks}
-              setAllBookmarks={setAllBookmarks}
-              directory={directory}
-            />
           </div>
+          {bookmarks.map((bookmark: any, index) => (
+            <Bookmark
+              bookmarksRef={bookmarksRef}
+              directory={directory}
+              setDirectory={setDirectory}
+              key={index}
+              dataKey={directory + "/" + bookmark.name}
+              name={bookmark.name}
+              type={bookmark.type}
+              url={bookmark.url}
+              deleteBookmark={deleteBookmark}
+              loading={loading}
+              index={index}
+              setBookmarks={setBookmarks}
+            />
+          ))}
+          <div
+            onClick={() => {
+              setShowAddBookmarkForm(true);
+            }}
+            className="w-fit p-4 bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
+          >
+            Add shortcut or folder
+            <MdAddCircleOutline size={24} />
+          </div>
+          <AddbookmarkForm
+            setShowAddBookmarkForm={setShowAddBookmarkForm}
+            showAddBookmarkForm={showAddBookmarkForm}
+            bookmarks={bookmarks}
+            allBookmarks={allBookmarks}
+            setAllBookmarks={setAllBookmarks}
+            directory={directory}
+          />
         </div>
       </div>
       <p>

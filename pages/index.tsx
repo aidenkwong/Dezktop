@@ -1,10 +1,10 @@
 import Head from "next/head";
 import Header from "../components/Header";
 import { useEffect } from "react";
-import Links from "../components/Bookmarks/Bookmarks";
+import Bookmarks from "../components/Bookmarks/Bookmarks";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
-import Router from "next/router";
+// import Router from "next/router";
 
 export default function Home() {
   const { theme } = useThemeContext();
@@ -19,9 +19,9 @@ export default function Home() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        Router.push("/auth");
-      }
+      // if (!user) {
+      //   Router.push("/auth");
+      // }
     };
 
     getUser();
@@ -40,7 +40,7 @@ export default function Home() {
       <main className="text-cotent">
         <Header />
         <div className="p-2 gap-2 flex flex-col pt-12">
-          <Links />
+          <Bookmarks />
         </div>
       </main>
     </div>
