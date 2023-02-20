@@ -413,7 +413,7 @@ const Bookmarks = () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col">
       <div className="hover:resize rounded border border-neutral-500 p-2 my-2 overflow-auto min-w-[196px]">
         <div className="grid gap-2 grid-cols-auto-180">
           <div className="col-span-full flex justify-between">
@@ -470,7 +470,7 @@ const Bookmarks = () => {
         <input type="file" onChange={fileOnChange} />
       </p>
       <ImportBookmarkInstruction />
-    </>
+    </div>
   );
 };
 

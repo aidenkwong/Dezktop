@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Bookmarks from "../components/Bookmarks/Bookmarks";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
+import Note from "../components/Note/Note";
 // import Router from "next/router";
 
 export default function Home() {
@@ -39,7 +40,8 @@ export default function Home() {
       </Head>
       <main className="text-cotent">
         <Header />
-        <div className="p-2 gap-2 flex flex-col pt-12">
+        <div className="p-2 gap-2 flex pt-12">
+          <Note />
           <Bookmarks />
         </div>
       </main>
