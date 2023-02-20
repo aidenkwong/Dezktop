@@ -10,14 +10,13 @@ const Bookmarks = () => {
   const supabase = useSupabaseClient();
   const user = useUser();
 
-  // useState
   const [loading, setLoading] = useState(false);
-
   const [bookmarks, setBookmarks] = useState<Array<any>>([]);
   const [directory, setDirectory] = useState<string>("My Bookmarks");
   const [showAddBookmarkForm, setShowAddBookmarkForm] = useState(false);
 
   // useRef
+  const bookmarksContainerRef = useRef<HTMLDivElement | null>(null);
   const bookmarksRef = useRef<Array<HTMLDivElement | null>>([]);
   const directoryRef = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -43,7 +42,6 @@ const Bookmarks = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-
     // Fetch bookmarks from supabase
     const fetchBookmarks = async () => {
       const { data, error } = await supabase
@@ -402,74 +400,76 @@ const Bookmarks = () => {
   };
 
   return (
-    <div>
-      <div className="my-2">
-        <div className="grid gap-2 grid-cols-auto-224">
-          <div className="col-span-full flex justify-between">
-            <div>
-              {directory.split("/").map((dir, index) => (
-                <span key={index}>
-                  {index !== 0 && <i className="text-content">{"  >  "}</i>}
-                  <button
-                    className={`directory ${
-                      index !== directory.split("/").length - 1 &&
-                      "hover:bg-foreground2Hover"
-                    }  px-3 rounded-full bg-foreground2 text-content border-2 border-transparent`}
-                    data-key={directory
-                      .split("/")
-                      .slice(0, index + 1)
-                      .join("/")}
-                    ref={(el) => (directoryRef.current[index] = el)}
-                    key={index}
-                    onClick={() =>
-                      setDirectory(
-                        directory
-                          .split("/")
-                          .slice(0, index + 1)
-                          .join("/")
-                      )
-                    }
-                    disabled={index === directory.split("/").length - 1}
-                  >
-                    {dir}
-                  </button>
-                </span>
-              ))}
+    <>
+      <div className="hover:resize rounded border border-neutral-500 p-2 my-2 overflow-auto min-w-[196px]">
+        <div className="my-2" ref={bookmarksContainerRef}>
+          <div className="grid gap-2 grid-cols-auto-180">
+            <div className="col-span-full flex justify-between">
+              <div>
+                {directory.split("/").map((dir, index) => (
+                  <span key={index} className="my-2">
+                    {index !== 0 && <i className="text-content">{"  >  "}</i>}
+                    <button
+                      className={`directory ${
+                        index !== directory.split("/").length - 1 &&
+                        "hover:bg-foreground2Hover"
+                      }  px-3 py-1 rounded-full bg-foreground2 text-content border-2 border-transparent`}
+                      data-key={directory
+                        .split("/")
+                        .slice(0, index + 1)
+                        .join("/")}
+                      ref={(el) => (directoryRef.current[index] = el)}
+                      key={index}
+                      onClick={() =>
+                        setDirectory(
+                          directory
+                            .split("/")
+                            .slice(0, index + 1)
+                            .join("/")
+                        )
+                      }
+                      disabled={index === directory.split("/").length - 1}
+                    >
+                      {dir}
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-          {bookmarks.map((bookmark: any, index) => (
-            <Bookmark
-              bookmarksRef={bookmarksRef}
+            {bookmarks.map((bookmark: any, index) => (
+              <Bookmark
+                bookmarksRef={bookmarksRef}
+                directory={directory}
+                setDirectory={setDirectory}
+                key={index}
+                dataKey={directory + "/" + bookmark.name}
+                name={bookmark.name}
+                type={bookmark.type}
+                url={bookmark.url}
+                deleteBookmark={deleteBookmark}
+                loading={loading}
+                index={index}
+                setBookmarks={setBookmarks}
+              />
+            ))}
+            <div
+              onClick={() => {
+                setShowAddBookmarkForm(true);
+              }}
+              className="w-fit h-fit p-4 bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
+            >
+              Add shortcut or folder
+              <MdAddCircleOutline size={24} />
+            </div>
+            <AddbookmarkForm
+              setShowAddBookmarkForm={setShowAddBookmarkForm}
+              showAddBookmarkForm={showAddBookmarkForm}
+              bookmarks={bookmarks}
+              allBookmarks={allBookmarks}
+              setAllBookmarks={setAllBookmarks}
               directory={directory}
-              setDirectory={setDirectory}
-              key={index}
-              dataKey={directory + "/" + bookmark.name}
-              name={bookmark.name}
-              type={bookmark.type}
-              url={bookmark.url}
-              deleteBookmark={deleteBookmark}
-              loading={loading}
-              index={index}
-              setBookmarks={setBookmarks}
             />
-          ))}
-          <div
-            onClick={() => {
-              setShowAddBookmarkForm(true);
-            }}
-            className="h-32 gap-1 w-full bg-foreground2 hover:bg-foreground2Hover flex justify-center items-center rounded opacity-30 cursor-pointer"
-          >
-            Add shortcut or folder
-            <MdAddCircleOutline size={24} />
           </div>
-          <AddbookmarkForm
-            setShowAddBookmarkForm={setShowAddBookmarkForm}
-            showAddBookmarkForm={showAddBookmarkForm}
-            bookmarks={bookmarks}
-            allBookmarks={allBookmarks}
-            setAllBookmarks={setAllBookmarks}
-            directory={directory}
-          />
         </div>
       </div>
       <p>
@@ -477,7 +477,7 @@ const Bookmarks = () => {
         <input type="file" onChange={fileOnChange} />
       </p>
       <ImportBookmarkInstruction />
-    </div>
+    </>
   );
 };
 
