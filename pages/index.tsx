@@ -32,8 +32,6 @@ export default function Home() {
     getUser();
   }, [supabase.auth, user]);
 
-  if (!user) return null;
-
   return (
     <div className={theme}>
       <Head>
