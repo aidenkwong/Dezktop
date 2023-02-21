@@ -1,11 +1,22 @@
 import Head from "next/head";
 import Header from "../components/Header/Header";
 import { useEffect } from "react";
-import Bookmarks from "../components/Bookmarks/Bookmarks";
+// import Bookmarks from "../components/Bookmarks/Bookmarks";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
-import Note from "../components/Note/Note";
+// import Note from "../components/Note/Note";
 import Router from "next/router";
+import dynamic from "next/dynamic";
+
+const Bookmarks = dynamic(() => import("../components/Bookmarks/Bookmarks"), {
+  ssr: false,
+});
+const Note = dynamic(() => import("../components/Note/Note"), {
+  ssr: false,
+});
+// const Header = dynamic(() => import("../components/Header/Header"), {
+//   ssr: false,
+// });
 
 export default function Home() {
   const { theme } = useThemeContext();

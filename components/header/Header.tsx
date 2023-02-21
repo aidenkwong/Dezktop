@@ -41,11 +41,7 @@ const Header = () => {
   );
   const [dayPeriod, setDayPeriod] = useState(formatAMPM(new Date()));
   const [options, setOptions] = useState<Array<Location>>([]);
-  const [location, setLocation] = useState<Location | null>(
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("location")!!)
-      : null
-  );
+  const [location, setLocation] = useState<Location | null>();
   const [showChangeLocation, setShowChangeLocation] = useState(!location);
 
   // useRef
@@ -116,6 +112,8 @@ const Header = () => {
   // Component did mount
   useEffect(() => {
     // Update time every second
+    setLocation(JSON.parse(localStorage.getItem("location")!!));
+
     const interval = setInterval(() => {
       setWeekDay(weekdayNumToStr(new Date().getDay()));
       setDate(new Date().getDate());

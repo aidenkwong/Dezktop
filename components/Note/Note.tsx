@@ -67,7 +67,7 @@ const Note: FC = () => {
           className="resize-none outline-none my-2 p-1 bg-background2 flex-auto"
           placeholder="Type something..."
           value={value}
-          onChange={(e) => onChange(e)}
+          onChange={onChange}
         />
       ) : (
         <p className="my-2 p-1 whitespace-pre-wrap">{value}</p>
