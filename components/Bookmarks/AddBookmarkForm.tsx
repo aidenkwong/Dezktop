@@ -94,7 +94,6 @@ const AddBookmarkForm = ({
 
     dfs(tmpAllBookmarks[0].children, directory + "/" + addedBookmark.name, 0);
 
-    console.log(tmpAllBookmarks);
     setAllBookmarks(tmpAllBookmarks);
     setFormData({ name: "", type: "url", url: "" });
     setShowAddBookmarkForm(false);

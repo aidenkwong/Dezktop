@@ -76,7 +76,8 @@ const Bookmark = ({
                   src={src}
                   width={16}
                   height={16}
-                  onError={() => {
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
                     // setSrc("/assets/favicon-error.svg");
                     setSrc(
                       "https://s2.googleusercontent.com/s2/favicons?domain=" +

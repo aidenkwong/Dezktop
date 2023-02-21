@@ -128,7 +128,6 @@ const Header = () => {
 
     if (!user) return;
 
-    console.log(user);
     (async () => {
       try {
         const { data, error } = await supabase

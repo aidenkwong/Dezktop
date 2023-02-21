@@ -39,21 +39,14 @@ const Bookmarks = () => {
   const directoryRef = useRef<Array<HTMLButtonElement | null>>([]); // Nodes for Directories
   const [allBookmarks, setAllBookmarks] = useState<Array<any>>( // All Bookmarks State
     // Getting bookmarks from local storage
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem(`${user?.id}_bookmarks`)!!) || [
-          {
-            name: "My Bookmarks",
-            type: "folder",
-            children: [],
-          },
-        ]
-      : [
-          {
-            name: "My Bookmarks",
-            type: "folder",
-            children: [],
-          },
-        ]
+    (typeof window !== "undefined" &&
+      JSON.parse(localStorage.getItem(`${user?.id}_bookmarks`)!!)) || [
+      {
+        name: "My Bookmarks",
+        type: "folder",
+        children: [],
+      },
+    ]
   );
 
   useEffect(() => {
@@ -115,7 +108,9 @@ const Bookmarks = () => {
 
     updateBookmarks();
     setLoading(false);
-  }, [allBookmarks, supabase, user?.id]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allBookmarks]);
 
   useEffect(() => {
     setBookmarks((prev) => prev.sort((a, b) => a.type.localeCompare(b.type))); // Reorder the bookmarks in current directory
