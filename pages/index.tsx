@@ -5,7 +5,7 @@ import Bookmarks from "../components/Bookmarks/Bookmarks";
 import { useThemeContext } from "../provider/ThemeProvider";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import Note from "../components/Note/Note";
-// import Router from "next/router";
+import Router from "next/router";
 
 export default function Home() {
   const { theme } = useThemeContext();
@@ -20,9 +20,9 @@ export default function Home() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      // if (!user) {
-      //   Router.push("/auth");
-      // }
+      if (!user) {
+        Router.push("/auth");
+      }
     };
 
     getUser();
