@@ -26,11 +26,11 @@ const Auth = () => {
 
   // functions
   const handleSignUpWithPassword = async () => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
-      password,
+      password
     });
-
+    console.log(data);
     if (error) {
       setError(error.message);
       return;
@@ -40,7 +40,7 @@ const Auth = () => {
   const handleSignInWithPassword = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     });
 
     if (error) {
@@ -63,8 +63,8 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "http://localhost:3000",
-      },
+        redirectTo: "http://localhost:3000"
+      }
     });
 
     if (error) {
@@ -78,8 +78,8 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: {
-          redirectTo: "http://localhost:3000",
-        },
+          redirectTo: "http://localhost:3000"
+        }
       });
 
       if (error) {
@@ -102,7 +102,7 @@ const Auth = () => {
     <div className={`theme-${theme}`}>
       <div className="grid h-screen place-items-center">
         <div className="flex flex-col gap-4 items-start">
-          {!signUp ? (
+          {/* {!signUp ? (
             <h1 className="text-3xl font-bold">Dezktop</h1>
           ) : (
             <h1 className="text-3xl font-bold">Dezktop</h1>
@@ -172,7 +172,7 @@ const Auth = () => {
                 Sign up
               </button>
             )}
-          </form>
+          </form> */}
           {!signUp && (
             <div className="flex flex-col gap-4">
               <button
@@ -203,7 +203,7 @@ const Auth = () => {
             </div>
           )}
 
-          {!signUp ? (
+          {/* {!signUp ? (
             <div>
               {"Don't have an account? "}
               <button onClick={() => setSignUp(true)}>Sign Up</button>
@@ -213,7 +213,7 @@ const Auth = () => {
               {"Already have an account? "}
               <button onClick={() => setSignUp(false)}>Sign In</button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

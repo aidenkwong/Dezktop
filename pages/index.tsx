@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Header from "../components/Header/Header";
+import Header from "../components/header/Header";
 import { useEffect } from "react";
 // import Bookmarks from "../components/Bookmarks/Bookmarks";
 import { useThemeContext } from "../provider/ThemeProvider";
@@ -9,10 +9,10 @@ import Router from "next/router";
 import dynamic from "next/dynamic";
 
 const Bookmarks = dynamic(() => import("../components/Bookmarks/Bookmarks"), {
-  ssr: false,
+  ssr: false
 });
 const Note = dynamic(() => import("../components/Note/Note"), {
-  ssr: false,
+  ssr: false
 });
 // const Header = dynamic(() => import("../components/Header/Header"), {
 //   ssr: false,
@@ -29,7 +29,7 @@ export default function Home() {
     const getUser = async () => {
       const {
         data: { user },
-        error,
+        error
       } = await supabase.auth.getUser();
 
       if (error) {
